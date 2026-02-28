@@ -136,7 +136,7 @@ export default function HomeScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <ThemedText style={styles.title}>Habits</ThemedText>
+            <ThemedText style={styles.title}>bits</ThemedText>
             <TouchableOpacity
               onPress={cycleTheme}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -269,29 +269,20 @@ export default function HomeScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.habitInfo}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        {
-                          borderColor:
-                            colorScheme === "dark" ? "#4B5563" : "#E5E7EB",
-                          backgroundColor:
-                            isCompleted && colorScheme === "dark"
+                    <View style={styles.iconContainer}>
+                      <Ionicons
+                        name={habit.icon as any}
+                        size={24}
+                        color={
+                          isCompleted
+                            ? colorScheme === "dark"
                               ? "#FFFFFF"
-                              : isCompleted
-                                ? "#111827"
-                                : "transparent",
-                          borderRadius: 6,
-                        },
-                      ]}
-                    >
-                      {isCompleted && (
-                        <Ionicons
-                          name="checkmark"
-                          size={16}
-                          color={colorScheme === "dark" ? "#000" : "#fff"}
-                        />
-                      )}
+                              : "#111827"
+                            : colorScheme === "dark"
+                              ? "#374151"
+                              : "#E5E7EB"
+                        }
+                      />
                     </View>
                     <ThemedText
                       style={[
@@ -367,8 +358,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 34,
-    fontWeight: "700",
     lineHeight: 40,
+    fontFamily: "Geist-Bold",
     letterSpacing: -0.5,
   },
   themeButton: {
@@ -409,15 +400,15 @@ const styles = StyleSheet.create({
   dayText: {
     fontSize: 12,
     color: "#9CA3AF",
-    fontWeight: "500",
+    fontFamily: "Geist-Medium",
     textTransform: "uppercase",
   },
   dateText: {
     fontSize: 17,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
   },
   selectedText: {
-    fontWeight: "700",
+    fontFamily: "Geist-Bold",
   },
   divider: {
     height: 1,
@@ -435,24 +426,17 @@ const styles = StyleSheet.create({
   habitInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 16,
     flex: 1,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
-    borderWidth: 2,
+  iconContainer: {
+    width: 32,
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: {
-    backgroundColor: "#000000",
-    borderColor: "#000000",
-  },
   habitName: {
-    fontSize: 17,
-    fontWeight: "500",
+    fontSize: 18,
+    fontFamily: "Geist-SemiBold",
   },
   completedHabitText: {
     color: "#9CA3AF",
@@ -495,6 +479,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: "#9CA3AF",
-    fontWeight: "500",
+    fontFamily: "Geist-Medium",
   },
 });

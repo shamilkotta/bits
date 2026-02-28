@@ -29,6 +29,7 @@ export const habitCompletions = sqliteTable(
 export const userSettings = sqliteTable("user_settings", {
   id: int().primaryKey({ autoIncrement: true }),
   theme: text().notNull().default("system"), // light, dark, system
+  hasSeenOnboarding: int().notNull().default(0), // 0 = false, 1 = true
 });
 
 // Type exports

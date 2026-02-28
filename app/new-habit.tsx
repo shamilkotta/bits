@@ -92,22 +92,39 @@ export default function NewHabitScreen() {
     );
   };
 
-  const onTimeChange = (event: any, selectedDate?: Date) => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const onTimeChange = (event: any, date?: Date) => {
     if (Platform.OS === "android") {
       setShowPicker(false);
-    }
-    if (event.type === "set" && selectedDate) {
-      const timeStr = selectedDate.toLocaleTimeString([], {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-      if (!selectedTimes.includes(timeStr)) {
-        setSelectedTimes((prev) => [...prev, timeStr]);
+      if (event.type === "set" && date) {
+        const timeStr = date.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+        if (!selectedTimes.includes(timeStr)) {
+          setSelectedTimes((prev) => [...prev, timeStr]);
+        }
       }
-    } else if (event.type === "dismissed") {
-      setShowPicker(false);
+    } else {
+      // iOS
+      if (date) {
+        setSelectedDate(date);
+      }
     }
+  };
+
+  const handleConfirmTime = () => {
+    const timeStr = selectedDate.toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    if (!selectedTimes.includes(timeStr)) {
+      setSelectedTimes((prev) => [...prev, timeStr]);
+    }
+    setShowPicker(false);
   };
 
   const isDark = colorScheme === "dark";
@@ -120,7 +137,7 @@ export default function NewHabitScreen() {
           style={{ flex: 1 }}
         >
           <View style={styles.header}>
-            <ThemedText style={styles.title}>New Habit</ThemedText>
+            <ThemedText style={styles.title}>New bit</ThemedText>
             <TouchableOpacity
               onPress={() => router.back()}
               style={styles.closeButton}
@@ -326,7 +343,10 @@ export default function NewHabitScreen() {
                     styles.timeChip,
                     { borderColor: isDark ? "#333" : "#EEE" },
                   ]}
-                  onPress={() => setShowPicker(true)}
+                  onPress={() => {
+                    setSelectedDate(new Date());
+                    setShowPicker(true);
+                  }}
                 >
                   <Ionicons
                     name="add"
@@ -335,7 +355,42 @@ export default function NewHabitScreen() {
                   />
                 </TouchableOpacity>
               </ScrollView>
-              {showPicker && (
+              {showPicker && Platform.OS === "ios" && (
+                <Modal visible={true} transparent animationType="slide">
+                  <Pressable
+                    style={styles.modalBackdropBlur}
+                    onPress={() => setShowPicker(false)}
+                  >
+                    <View
+                      style={[
+                        styles.bottomSheet,
+                        { backgroundColor: isDark ? "#1A1A1A" : "#FFF" },
+                      ]}
+                    >
+                      <View style={styles.sheetHeader}>
+                        <TouchableOpacity onPress={() => setShowPicker(false)}>
+                          <ThemedText style={styles.sheetCancel}>
+                            Cancel
+                          </ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleConfirmTime}>
+                          <ThemedText style={styles.sheetDone}>Done</ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                      <DateTimePicker
+                        value={selectedDate}
+                        mode="time"
+                        is24Hour={false}
+                        display="spinner"
+                        onChange={onTimeChange}
+                        textColor={isDark ? "#FFF" : "#000"}
+                      />
+                    </View>
+                  </Pressable>
+                </Modal>
+              )}
+
+              {showPicker && Platform.OS === "android" && (
                 <DateTimePicker
                   value={new Date()}
                   mode="time"
@@ -510,7 +565,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "800",
+    fontFamily: "Geist-ExtraBold",
     letterSpacing: -0.5,
     lineHeight: 32,
   },
@@ -527,7 +582,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: 24,
-    fontWeight: "500",
+    fontFamily: "Geist-Medium",
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
@@ -543,20 +598,20 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
     color: "#888",
     letterSpacing: 1,
   },
   optionValue: {
     fontSize: 16,
-    fontWeight: "500",
+    fontFamily: "Geist-Medium",
   },
   section: {
     marginBottom: 32,
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
     color: "#888",
     letterSpacing: 1,
     marginBottom: 16,
@@ -582,11 +637,11 @@ const styles = StyleSheet.create({
   },
   timeChipText: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
   },
   numericInput: {
     fontSize: 16,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
     textAlign: "right",
   },
   goalInputWrapper: {
@@ -597,7 +652,7 @@ const styles = StyleSheet.create({
   unitLabel: {
     fontSize: 16,
     color: "#888",
-    fontWeight: "500",
+    fontFamily: "Geist-Medium",
   },
   horizontalScroll: {
     marginHorizontal: -24,
@@ -639,7 +694,7 @@ const styles = StyleSheet.create({
   },
   popoverTitle: {
     fontSize: 14,
-    fontWeight: "600",
+    fontFamily: "Geist-SemiBold",
     color: "#888",
   },
   daysGridCompact: {
@@ -657,7 +712,7 @@ const styles = StyleSheet.create({
   },
   dayCircleText: {
     fontSize: 12,
-    fontWeight: "700",
+    fontFamily: "Geist-Bold",
   },
   iconCircle: {
     width: 48,
@@ -689,7 +744,7 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     fontSize: 16,
-    fontWeight: "700",
+    fontFamily: "Geist-Bold",
     letterSpacing: 1,
   },
   sectionHeader: {
@@ -717,7 +772,34 @@ const styles = StyleSheet.create({
   },
   comingSoonText: {
     fontSize: 8,
-    fontWeight: "700",
+    fontFamily: "Geist-Bold",
     color: "#888",
+  },
+  modalBackdropBlur: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "flex-end",
+  },
+  bottomSheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 40,
+  },
+  sheetHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  sheetCancel: {
+    fontSize: 16,
+    color: "#666",
+    fontFamily: "Geist-Medium",
+  },
+  sheetDone: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontFamily: "Geist-Bold",
   },
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `user_settings` ADD `hasSeenOnboarding` integer DEFAULT 0 NOT NULL;
