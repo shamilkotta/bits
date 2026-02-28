@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useTheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
   Dimensions,
@@ -85,6 +86,7 @@ const DAYS_COUNT = 184; // 180 past days + 1 today + 4 future days
 const OFFSET_DAYS = 180;
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { theme, setTheme, colorScheme } = useTheme();
   const today = useMemo(() => formatDate(new Date()), []);
   const flatListRef = useRef<FlatList>(null);
@@ -351,14 +353,13 @@ export default function HomeScreen() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* Floating Action Button */}
       <TouchableOpacity
         style={[
           styles.fab,
           { backgroundColor: Colors[colorScheme].text }, // Use text color as background for contrast
         ]}
         activeOpacity={0.8}
-        onPress={() => console.log("Add habit")}
+        onPress={() => router.push("/new-habit")}
       >
         <Ionicons name="add" size={32} color={Colors[colorScheme].background} />
       </TouchableOpacity>

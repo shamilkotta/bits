@@ -35,8 +35,8 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
+            name="new-habit"
+            options={{ presentation: "containedModal", headerShown: false }}
           />
         </Stack>
         <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
