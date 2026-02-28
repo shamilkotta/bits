@@ -1,5 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
+import { useCreateHabit } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -52,6 +53,8 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function NewHabitScreen() {
   const { colorScheme } = useTheme();
   const router = useRouter();
+  const { createHabit } = useCreateHabit();
+  const [saving, setSaving] = useState(false);
 
   const [name, setName] = useState("");
   const [frequency, setFrequency] = useState("Daily");
@@ -426,8 +429,27 @@ export default function NewHabitScreen() {
               style={[
                 styles.createButton,
                 { backgroundColor: isDark ? "#FFF" : "#000" },
+                saving && { opacity: 0.6 },
               ]}
-              onPress={() => router.back()}
+              disabled={saving || !name.trim()}
+              onPress={async () => {
+                if (!name.trim()) return;
+                setSaving(true);
+                try {
+                  await createHabit({
+                    name: name.trim(),
+                    icon: selectedIcon,
+                    frequency,
+                    customDays: JSON.stringify(customDays),
+                    goal: parseInt(goal, 10) || 1,
+                    times: JSON.stringify(selectedTimes),
+                  });
+                  router.back();
+                } catch (e) {
+                  console.error("Failed to create habit:", e);
+                  setSaving(false);
+                }
+              }}
             >
               <ThemedText
                 style={[
@@ -435,7 +457,7 @@ export default function NewHabitScreen() {
                   { color: isDark ? "#000" : "#FFF" },
                 ]}
               >
-                CREATE
+                {saving ? "SAVING..." : "CREATE"}
               </ThemedText>
             </TouchableOpacity>
           </View>

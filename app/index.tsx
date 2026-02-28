@@ -1,10 +1,16 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
+import {
+  useCompletionCounts,
+  useHabitCompletions,
+  useHabits,
+  useToggleCompletion,
+} from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -42,46 +48,6 @@ const getDatesRange = (daysCount: number, offset: number = 0) => {
   return dates;
 };
 
-const INITIAL_HABITS = [
-  "Do flow work",
-  "Eat a healthy meal",
-  "Morning workout",
-  "Avoid screen time",
-  "Meditate",
-  "Drink Water",
-  "Read Book new long task goes here",
-];
-
-// Generate some dummy history for the heatmap
-const generateDummyHistory = (habits: string[]) => {
-  const history: Record<string, Record<string, boolean>> = {};
-  const todayStr = formatDate(new Date());
-
-  // Use a fixed range for dummy data
-  const range = [];
-  const start = new Date();
-  start.setDate(start.getDate() - 100);
-  for (let i = 0; i < 150; i++) {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    range.push(formatDate(d));
-  }
-
-  range.forEach((date) => {
-    history[date] = {};
-    if (date < todayStr) {
-      habits.forEach((habit) => {
-        history[date][habit] = Math.random() > 0.4;
-      });
-    } else if (date === todayStr) {
-      habits.forEach((habit) => {
-        history[date][habit] = false;
-      });
-    }
-  });
-  return history;
-};
-
 const DAYS_COUNT = 184; // 180 past days + 1 today + 4 future days
 const OFFSET_DAYS = 180;
 
@@ -90,10 +56,33 @@ export default function HomeScreen() {
   const { theme, setTheme, colorScheme } = useTheme();
   const today = useMemo(() => formatDate(new Date()), []);
   const flatListRef = useRef<FlatList>(null);
-  const [history, setHistory] = useState(() =>
-    generateDummyHistory(INITIAL_HABITS),
-  );
   const [selectedDate, setSelectedDate] = useState(today);
+
+  // DB hooks
+  const { habits, refetch: refetchHabits } = useHabits();
+  const { completions, refetch: refetchCompletions } =
+    useHabitCompletions(selectedDate);
+  const { toggle } = useToggleCompletion();
+
+  // Generate range for the scrollable calendar (days)
+  const calendarDates = useMemo(
+    () => getDatesRange(DAYS_COUNT, OFFSET_DAYS),
+    [],
+  );
+
+  const { percentages, refetch: refetchCounts } = useCompletionCounts(
+    calendarDates,
+    habits.length,
+  );
+
+  // Refetch data when screen comes into focus (e.g. after creating a habit)
+  useFocusEffect(
+    useCallback(() => {
+      refetchHabits();
+      refetchCompletions();
+      refetchCounts();
+    }, [refetchHabits, refetchCompletions, refetchCounts]),
+  );
 
   // Cycle through theme modes: system -> light -> dark -> system
   const cycleTheme = () => {
@@ -109,27 +98,17 @@ export default function HomeScreen() {
   };
 
   // Toggle habit completion for selected date
-  const toggleHabit = (habitName: string) => {
+  const toggleHabit = async (habitId: number) => {
     if (selectedDate > today) return;
-
-    setHistory((prev) => {
-      const currentDayData = prev[selectedDate] || {};
-      return {
-        ...prev,
-        [selectedDate]: {
-          ...currentDayData,
-          [habitName]: !currentDayData[habitName],
-        },
-      };
-    });
+    const currentlyCompleted = !!completions[habitId];
+    await toggle(habitId, selectedDate, currentlyCompleted);
+    refetchCompletions();
+    refetchCounts();
   };
 
   // Calculate completion percentage for any given date
   const getCompletionPercentage = (date: string) => {
-    const dayData = history[date];
-    if (!dayData) return 0;
-    const completedCount = Object.values(dayData).filter(Boolean).length;
-    return (completedCount / INITIAL_HABITS.length) * 100;
+    return percentages[date] || 0;
   };
 
   // Map percentage to heatmap color
@@ -147,12 +126,6 @@ export default function HomeScreen() {
     if (percentage <= 75) return "#4B5563";
     return "#111827";
   };
-
-  // Generate range for the scrollable calendar (days)
-  const calendarDates = useMemo(
-    () => getDatesRange(DAYS_COUNT, OFFSET_DAYS),
-    [],
-  );
 
   return (
     <ThemedView style={styles.container}>
@@ -279,12 +252,19 @@ export default function HomeScreen() {
 
           {/* Habit List for Selected Date */}
           <View style={styles.habitList}>
-            {INITIAL_HABITS.map((habitName) => {
-              const isCompleted = history[selectedDate]?.[habitName];
+            {habits.length === 0 && (
+              <View style={styles.emptyState}>
+                <ThemedText style={styles.emptyText}>
+                  No habits yet. Tap + to create one!
+                </ThemedText>
+              </View>
+            )}
+            {habits.map((habit) => {
+              const isCompleted = !!completions[habit.id];
               return (
                 <TouchableOpacity
-                  key={habitName}
-                  onPress={() => toggleHabit(habitName)}
+                  key={habit.id}
+                  onPress={() => toggleHabit(habit.id)}
                   style={styles.habitItem}
                   activeOpacity={0.7}
                 >
@@ -321,7 +301,7 @@ export default function HomeScreen() {
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
-                      {habitName}
+                      {habit.name}
                     </ThemedText>
                   </View>
                   <View style={styles.progressContainer}>
@@ -507,5 +487,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+  },
+  emptyState: {
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#9CA3AF",
+    fontWeight: "500",
   },
 });
