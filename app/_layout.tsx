@@ -23,6 +23,7 @@ export default function RootLayout() {
       ...DarkTheme.colors,
       background: "#000000",
       card: "#000000",
+      text: "#FFFFFF",
     },
   };
 
