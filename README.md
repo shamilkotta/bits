@@ -1,50 +1,84 @@
-# Welcome to your Expo app 👋
+# bits
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Bits** is a beautifully designed, minimalist habit tracking application built with Expo and React Native. It focuses on simplicity and native integration, helping you build consistency with ease.
 
-## Get started
+<div align="center">
+  <img src="./assets/readme/app.png" width="300" alt="Bits App UI" />
+  <img src="./assets/readme/widgets.png" width="300" alt="Bits iOS Widgets" />
+</div>
 
-1. Install dependencies
+## ✨ Features
+
+- **Daily Progress**: Visual circular gauge tracking your today's completion percentage.
+- **Weekly Heatmap**: A clean 7-day visualization of your habit consistency.
+- **Home Screen Widgets**: Native iOS & Android widgets to keep your habits visible:
+  - **Today's Progress**: A small gauge for quick checks.
+  - **Weekly Heatmap**: A medium-sized overview of your week.
+- **Theme Support**: Fully responsive design that respects system light and dark modes.
+- **Modern Typography**: Powered by the Geist Sans font family for a premium feel.
+- **Persistent Storage**: Robust local data management using **Expo SQLite** and **Drizzle ORM**.
+
+## 🛠️ Tech Stack
+
+- **Core**: Expo (v55+), React Native (0.83+)
+- **Navigation**: Expo Router (File-based)
+- **Database**: Drizzle ORM + Expo SQLite
+- **Widgets**: Native SwiftUI (iOS) & Native Android Widgets
+- **Styling**: Vanilla React Native Styles with Dark Mode support
+- **Font**: Geist Sans
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (LTS)
+- [pnpm](https://pnpm.io/)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/)
+- **For iOS Widgets**: macOS with Xcode installed
+
+### Installation
+
+1. Clone the repository:
 
    ```bash
-   npm install
+   git clone https://github.com/shamilkotta/bits.git
+   cd bits
    ```
 
-2. Start the app
+2. Install dependencies:
 
    ```bash
-   npx expo start
+   pnpm install
    ```
 
-In the output, you'll find options to open the app in a
+3. Initialize the database:
+   ```bash
+   pnpm db:push
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+### Running the App
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Standard Start**:
 
-## Get a fresh project
+  ```bash
+  pnpm start
+  ```
 
-When you're ready, run:
+- **iOS (with Widgets Support)**:
 
-```bash
-npm run reset-project
-```
+  ```bash
+  pnpm ios
+  ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Android**:
+  ```bash
+  pnpm android
+  ```
 
-## Learn more
+## 📱 Widgets
 
-To learn more about developing your project with Expo, look at the following resources:
+This project leverages native widget capabilities. To see the widgets on iOS, you must run the app using `pnpm ios` (which builds the native code) and then add the widgets from the Home Screen menu.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## 📄 License
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+This project is private and intended for personal use.
