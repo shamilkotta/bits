@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.shudio.bits",
       "supportsTablet": true,
       "icon": {
         "dark": "./assets/images/ios-dark.png",
@@ -23,7 +24,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.shudio.bits"
     },
     "web": {
       "output": "static",
@@ -45,7 +47,35 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-sqlite"
+      "expo-sqlite",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "HeatmapWidget",
+              "displayName": "Weekly Heatmap",
+              "description": "Shows your habit completion heatmap for the last 7 days",
+              "supportedFamilies": [
+                "systemMedium"
+              ],
+              "contentMarginsDisabled": true
+            },
+            {
+              "name": "DailyProgressWidget",
+              "displayName": "Today's Progress",
+              "description": "Shows your habit completion progress for today",
+              "supportedFamilies": [
+                "systemSmall"
+              ],
+              "contentMarginsDisabled": true
+            }
+          ]
+        }
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

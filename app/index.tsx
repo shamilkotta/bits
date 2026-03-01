@@ -8,6 +8,7 @@ import {
   useToggleCompletion,
 } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
+import { updateAllWidgets } from "@/widgets/update-widgets";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -81,7 +82,8 @@ export default function HomeScreen() {
       refetchHabits();
       refetchCompletions();
       refetchCounts();
-    }, [refetchHabits, refetchCompletions, refetchCounts]),
+      updateAllWidgets(colorScheme === "dark");
+    }, [refetchHabits, refetchCompletions, refetchCounts, colorScheme]),
   );
 
   // Cycle through theme modes: system -> light -> dark -> system
@@ -104,6 +106,7 @@ export default function HomeScreen() {
     await toggle(habitId, selectedDate, currentlyCompleted);
     refetchCompletions();
     refetchCounts();
+    updateAllWidgets(colorScheme === "dark");
   };
 
   // Calculate completion percentage for any given date
