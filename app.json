@@ -69,6 +69,36 @@
           ]
         }
       ],
+      [
+        "react-native-android-widget",
+        {
+          "fonts": [
+            "./assets/fonts/Geist-Bold.ttf",
+            "./assets/fonts/Geist-SemiBold.ttf",
+            "./assets/fonts/Geist-Medium.ttf"
+          ],
+          "widgets": [
+            {
+              "name": "HeatmapWidget",
+              "label": "Weekly Heatmap",
+              "description": "Shows your habit completion heatmap for the last 7 days",
+              "minWidth": "320dp",
+              "minHeight": "140dp",
+              "targetCellWidth": 5,
+              "targetCellHeight": 2
+            },
+            {
+              "name": "DailyProgressWidget",
+              "label": "Today's Progress",
+              "description": "Shows your habit completion progress for today",
+              "minWidth": "140dp",
+              "minHeight": "140dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2
+            }
+          ]
+        }
+      ],
       "expo-font",
       "expo-image",
       "expo-web-browser"
