@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "bits",
+    "name": "Bits",
     "slug": "bits",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -56,18 +56,14 @@
               "name": "HeatmapWidget",
               "displayName": "Weekly Heatmap",
               "description": "Shows your habit completion heatmap for the last 7 days",
-              "supportedFamilies": [
-                "systemMedium"
-              ],
+              "supportedFamilies": ["systemMedium"],
               "contentMarginsDisabled": true
             },
             {
               "name": "DailyProgressWidget",
               "displayName": "Today's Progress",
               "description": "Shows your habit completion progress for today",
-              "supportedFamilies": [
-                "systemSmall"
-              ],
+              "supportedFamilies": ["systemSmall"],
               "contentMarginsDisabled": true
             }
           ]
