@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "bits.app"
-               BlueprintName = "bits"
-               ReferencedContainer = "container:bits.xcodeproj">
+               BuildableName = "Bits.app"
+               BlueprintName = "Bits"
+               ReferencedContainer = "container:Bits.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "bitsTests.xctest"
-               BlueprintName = "bitsTests"
-               ReferencedContainer = "container:bits.xcodeproj">
+               BuildableName = "BitsTests.xctest"
+               BlueprintName = "BitsTests"
+               ReferencedContainer = "container:Bits.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "bits.app"
-            BlueprintName = "bits"
-            ReferencedContainer = "container:bits.xcodeproj">
+            BuildableName = "Bits.app"
+            BlueprintName = "Bits"
+            ReferencedContainer = "container:Bits.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "bits.app"
-            BlueprintName = "bits"
-            ReferencedContainer = "container:bits.xcodeproj">
+            BuildableName = "Bits.app"
+            BlueprintName = "Bits"
+            ReferencedContainer = "container:Bits.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

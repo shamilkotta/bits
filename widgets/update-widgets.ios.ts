@@ -1,5 +1,5 @@
-import DailyProgressWidget from "./DailyProgressWidget";
-import HeatmapWidget from "./HeatmapWidget";
+import DailyProgressWidget from "./ios/DailyProgressWidget";
+import HeatmapWidget from "./ios/HeatmapWidget";
 import { getDailyProgressData, getHeatmapData } from "./widget-data";
 
 export async function updateAllWidgets(isDark: boolean) {
