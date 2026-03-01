@@ -33,38 +33,48 @@ export function HeatmapAndroidWidget({
   days,
   isDark,
 }: HeatmapAndroidWidgetProps) {
+  const widgetDays = days.slice(-7);
+
   return (
     <FlexWidget
+      clickAction="OPEN_APP"
       style={{
         height: "match_parent",
         width: "match_parent",
         backgroundColor: isDark ? "#000000" : "#FFFFFF",
         borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
         justifyContent: "center",
+        alignItems: "center",
       }}
     >
       <FlexWidget
         style={{
+          width: "match_parent",
           flexDirection: "row",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "flex-end",
+          flexGap: 0,
         }}
       >
-        {days.map((day) => (
+        {widgetDays.map((day) => (
           <FlexWidget
             key={`${day.label}-${day.date}`}
-            style={{ alignItems: "center", justifyContent: "center" }}
+            style={{
+              width: 24,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
           >
             <TextWidget
               text={day.label.toUpperCase()}
               style={{
                 color: "#98A1AF",
                 fontFamily: "Geist-Medium",
-                fontSize: 12,
+                fontSize: 10,
                 textAlign: "center",
-                marginBottom: 6,
+                marginBottom: 2,
               }}
             />
             <TextWidget
@@ -72,16 +82,16 @@ export function HeatmapAndroidWidget({
               style={{
                 color: isDark ? "#FFFFFF" : "#111827",
                 fontFamily: "Geist-SemiBold",
-                fontSize: 22,
+                fontSize: 16,
                 textAlign: "center",
-                marginBottom: 8,
+                marginBottom: 3,
               }}
             />
             <FlexWidget
               style={{
-                width: 30,
-                height: 30,
-                borderRadius: 7,
+                width: 24,
+                height: 24,
+                borderRadius: 6,
                 backgroundColor: getHeatmapColor(day.percentage, isDark),
               }}
             />

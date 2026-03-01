@@ -82,19 +82,21 @@
               "name": "HeatmapWidget",
               "label": "Weekly Heatmap",
               "description": "Shows your habit completion heatmap for the last 7 days",
-              "minWidth": "320dp",
-              "minHeight": "140dp",
-              "targetCellWidth": 5,
-              "targetCellHeight": 2
+              "minWidth": "200dp",
+              "minHeight": "96dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical"
             },
             {
               "name": "DailyProgressWidget",
               "label": "Today's Progress",
               "description": "Shows your habit completion progress for today",
-              "minWidth": "140dp",
-              "minHeight": "140dp",
-              "targetCellWidth": 2,
-              "targetCellHeight": 2
+              "minWidth": "40dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical"
             }
           ]
         }

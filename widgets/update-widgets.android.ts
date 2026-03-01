@@ -22,12 +22,14 @@ export async function updateAllWidgets(isDark: boolean) {
       }),
       requestWidgetUpdate({
         widgetName: "DailyProgressWidget",
-        renderWidget: () =>
+        renderWidget: (widgetInfo) =>
           createElement(DailyProgressAndroidWidget, {
             percentage: dailyProgressData.percentage,
             day: dailyProgressData.day,
             weekday: dailyProgressData.weekday,
             isDark,
+            widgetWidthDp: widgetInfo.width,
+            widgetHeightDp: widgetInfo.height,
           }),
       }),
     ]);

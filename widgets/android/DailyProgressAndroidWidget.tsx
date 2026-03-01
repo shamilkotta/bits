@@ -12,23 +12,28 @@ type DailyProgressAndroidWidgetProps = {
   day: number;
   weekday: string;
   isDark: boolean;
+  widgetWidthDp?: number;
+  widgetHeightDp?: number;
 };
 
-const CIRCLE_SIZE = 180;
-const STROKE_WIDTH = 16;
-const RADIUS = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
-
-const buildProgressRingSvg = (progress: number, isDark: boolean) => {
+const buildProgressRingSvg = (
+  progress: number,
+  isDark: boolean,
+  circleSize: number,
+  strokeWidth: number,
+) => {
+  const radius = (circleSize - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
   const clampedProgress = Math.max(0, Math.min(1, progress));
-  const progressLength = CIRCUMFERENCE * clampedProgress;
-  const remainingLength = CIRCUMFERENCE - progressLength;
-  const trackColor = isDark ? "#A3A3A3" : "#C7C7C7";
+  const progressLength = circumference * clampedProgress;
+  const remainingLength = circumference - progressLength;
+  const trackColor = isDark ? "#1F2937" : "#C7C7C7";
+  const progressColor = isDark ? "#FFFFFF" : "#000000";
 
-  return `<svg width="${CIRCLE_SIZE}" height="${CIRCLE_SIZE}" viewBox="0 0 ${CIRCLE_SIZE} ${CIRCLE_SIZE}" xmlns="http://www.w3.org/2000/svg">
-  <g transform="rotate(-90 ${CIRCLE_SIZE / 2} ${CIRCLE_SIZE / 2})">
-    <circle cx="${CIRCLE_SIZE / 2}" cy="${CIRCLE_SIZE / 2}" r="${RADIUS}" fill="none" stroke="${trackColor}" stroke-width="${STROKE_WIDTH}" />
-    <circle cx="${CIRCLE_SIZE / 2}" cy="${CIRCLE_SIZE / 2}" r="${RADIUS}" fill="none" stroke="#000000" stroke-width="${STROKE_WIDTH}" stroke-linecap="round" stroke-dasharray="${progressLength} ${remainingLength}" />
+  return `<svg width="${circleSize}" height="${circleSize}" viewBox="0 0 ${circleSize} ${circleSize}" xmlns="http://www.w3.org/2000/svg">
+  <g transform="rotate(-90 ${circleSize / 2} ${circleSize / 2})">
+    <circle cx="${circleSize / 2}" cy="${circleSize / 2}" r="${radius}" fill="none" stroke="${trackColor}" stroke-width="${strokeWidth}" />
+    <circle cx="${circleSize / 2}" cy="${circleSize / 2}" r="${radius}" fill="none" stroke="${progressColor}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-dasharray="${progressLength} ${remainingLength}" />
   </g>
 </svg>`;
 };
@@ -38,29 +43,45 @@ export function DailyProgressAndroidWidget({
   day,
   weekday,
   isDark,
+  widgetWidthDp = 96,
+  widgetHeightDp = 96,
 }: DailyProgressAndroidWidgetProps) {
-  const ringSvg = buildProgressRingSvg(percentage, isDark);
+  const baseSize = Math.max(64, Math.min(widgetWidthDp, widgetHeightDp));
+  const containerPadding = Math.max(3, Math.floor(baseSize * 0.06));
+  const circleSize = Math.max(56, baseSize - containerPadding * 2 - 2);
+  const strokeWidth = Math.max(7, Math.min(10, Math.floor(circleSize * 0.12)));
+  const dayFontSize = Math.max(24, Math.floor(circleSize * 0.4));
+  const weekdayFontSize = Math.max(11, Math.floor(circleSize * 0.16));
+  const cardRadius = Math.max(10, Math.floor(baseSize * 0.12));
+  const ringSvg = buildProgressRingSvg(
+    percentage,
+    isDark,
+    circleSize,
+    strokeWidth,
+  );
 
   return (
     <FlexWidget
+      clickAction="OPEN_APP"
       style={{
         height: "match_parent",
         width: "match_parent",
         backgroundColor: isDark ? "#000000" : "#FFFFFF",
-        borderRadius: 20,
+        borderRadius: cardRadius,
+        padding: containerPadding,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
       <OverlapWidget
         style={{
-          width: CIRCLE_SIZE,
-          height: CIRCLE_SIZE,
+          width: circleSize,
+          height: circleSize,
         }}
       >
         <SvgWidget
           svg={ringSvg}
-          style={{ width: CIRCLE_SIZE, height: CIRCLE_SIZE }}
+          style={{ width: circleSize, height: circleSize }}
         />
 
         <FlexWidget
@@ -76,7 +97,7 @@ export function DailyProgressAndroidWidget({
             style={{
               color: isDark ? "#FFFFFF" : "#000000",
               fontFamily: "Geist-Bold",
-              fontSize: 52,
+              fontSize: dayFontSize,
               textAlign: "center",
             }}
           />
@@ -85,9 +106,9 @@ export function DailyProgressAndroidWidget({
             style={{
               color: "#6B7280",
               fontFamily: "Geist-SemiBold",
-              fontSize: 20,
+              fontSize: weekdayFontSize,
               textAlign: "center",
-              marginTop: -4,
+              marginTop: -1,
             }}
           />
         </FlexWidget>
