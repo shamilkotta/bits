@@ -6,6 +6,8 @@ export interface ThemeContextType {
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
   colorScheme: "light" | "dark";
+  hasSeenOnboarding: boolean;
+  completeOnboarding: () => Promise<void>;
 }
 
 export const ThemeContext = createContext<ThemeContextType | undefined>(

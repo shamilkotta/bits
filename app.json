@@ -83,7 +83,7 @@
               "label": "Weekly Heatmap",
               "description": "Shows your habit completion heatmap for the last 7 days",
               "minWidth": "200dp",
-              "minHeight": "96dp",
+              "minHeight": "40dp",
               "targetCellWidth": 3,
               "targetCellHeight": 1,
               "resizeMode": "horizontal|vertical"

@@ -1,7 +1,5 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { db } from "@/db/client";
-import { userSettings } from "@/db/schema";
 import { useTheme } from "@/hooks/use-theme";
 import { useRouter } from "expo-router";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
@@ -9,16 +7,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { colorScheme } = useTheme();
+  const { colorScheme, completeOnboarding } = useTheme();
 
   const handleStart = async () => {
-    try {
-      await db.update(userSettings).set({ hasSeenOnboarding: 1 });
+    completeOnboarding().then(() => {
       router.replace("/");
-    } catch (e) {
-      console.error("Failed to update onboarding status:", e);
-      router.replace("/");
-    }
+    });
   };
 
   return (

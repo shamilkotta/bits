@@ -10,7 +10,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { updateAllWidgets } from "@/widgets/update-widgets";
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect, useRouter } from "expo-router";
+import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
@@ -54,7 +54,7 @@ const OFFSET_DAYS = 180;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { theme, setTheme, colorScheme } = useTheme();
+  const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
   const today = useMemo(() => formatDate(new Date()), []);
   const flatListRef = useRef<FlatList>(null);
   const [selectedDate, setSelectedDate] = useState(today);
@@ -129,6 +129,10 @@ export default function HomeScreen() {
     if (percentage <= 75) return "#4B5563";
     return "#111827";
   };
+
+  if (!hasSeenOnboarding) {
+    return <Redirect href="/welcome" />;
+  }
 
   return (
     <ThemedView style={styles.container}>

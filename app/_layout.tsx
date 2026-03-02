@@ -83,6 +83,15 @@ export default function RootLayout() {
     }
   }, [migrationsSuccess]);
 
+  const completeOnboarding = async () => {
+    try {
+      await db.update(userSettings).set({ hasSeenOnboarding: 1 });
+      setHasSeenOnboarding(true);
+    } catch (e) {
+      console.error("Failed to complete onboarding:", e);
+    }
+  };
+
   const setTheme = async (newTheme: ThemeMode) => {
     setThemeState(newTheme);
     try {
@@ -93,7 +102,9 @@ export default function RootLayout() {
   };
 
   const colorScheme =
-    theme === "system" ? (nativeColorScheme ?? "light") : theme;
+    (theme === "system" ? (nativeColorScheme ?? "light") : theme) === "dark"
+      ? "dark"
+      : "light";
 
   const CustomDarkTheme = {
     ...DarkTheme,
@@ -125,7 +136,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colorScheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        setTheme,
+        colorScheme,
+        hasSeenOnboarding,
+        completeOnboarding,
+      }}
+    >
       <NavigationProvider
         value={colorScheme === "dark" ? CustomDarkTheme : DefaultTheme}
       >
@@ -133,7 +152,7 @@ export default function RootLayout() {
           initialRouteName={hasSeenOnboarding ? "index" : "welcome"}
           screenOptions={{ headerShown: false }}
         >
-          <Stack.Screen name="welcome" />
+          <Stack.Screen name="welcome" options={{ animation: "none" }} />
           <Stack.Screen name="index" />
           <Stack.Screen
             name="new-habit"
