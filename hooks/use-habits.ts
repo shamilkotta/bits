@@ -31,6 +31,65 @@ export function useHabits() {
   return { habits: data, loading, refetch };
 }
 
+// Fetch a single habit
+export function useHabit(id: number) {
+  const [data, setData] = useState<Habit | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    try {
+      const result = await db
+        .select()
+        .from(habits)
+        .where(eq(habits.id, id))
+        .limit(1);
+      setData(result[0] || null);
+    } catch (e) {
+      console.error("Failed to fetch habit:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { habit: data, loading, refetch };
+}
+
+// Delete a habit
+export function useDeleteHabit() {
+  const deleteHabit = useCallback(async (id: number) => {
+    try {
+      await db.delete(habits).where(eq(habits.id, id));
+      // Completions are deleted via cascade in schema
+    } catch (e) {
+      console.error("Failed to delete habit:", e);
+      throw e;
+    }
+  }, []);
+
+  return { deleteHabit };
+}
+
+// Update a habit
+export function useUpdateHabit() {
+  const updateHabit = useCallback(
+    async (id: number, habit: Partial<Omit<NewHabit, "id" | "createdAt">>) => {
+      try {
+        await db.update(habits).set(habit).where(eq(habits.id, id));
+      } catch (e) {
+        console.error("Failed to update habit:", e);
+        throw e;
+      }
+    },
+    [],
+  );
+
+  return { updateHabit };
+}
+
 // Create a new habit
 export function useCreateHabit() {
   const createHabit = useCallback(

@@ -158,6 +158,17 @@ export default function RootLayout() {
             name="new-habit"
             options={{ presentation: "containedModal" }}
           />
+          <Stack.Screen
+            name="habit/[id]"
+            options={{ presentation: "containedModal" }}
+          />
+          <Stack.Screen
+            name="habit/edit/[id]"
+            options={{
+              presentation: "containedModal",
+              animation: "slide_from_bottom",
+            }}
+          />
         </Stack>
         <StatusBar style={colorScheme === "dark" ? "light" : "dark"} />
       </NavigationProvider>
