@@ -1,6 +1,6 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
-import { useDeleteHabit, useHabit } from "@/hooks/use-habits";
+import { useDeleteHabit, useHabit, useHabitStats } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -19,6 +19,7 @@ export default function HabitDetailsScreen() {
   const router = useRouter();
   const { colorScheme } = useTheme();
   const { habit, loading } = useHabit(Number(id));
+  const { streak, totalLogged } = useHabitStats(Number(id));
   const { deleteHabit } = useDeleteHabit();
 
   const isDark = colorScheme === "dark";
@@ -132,6 +133,44 @@ export default function HabitDetailsScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
+          {/* Stats Section */}
+          <View style={styles.statsContainer}>
+            <View
+              style={[
+                styles.statItem,
+                { backgroundColor: isDark ? "#1A1A1A" : "#F3F4F6" },
+              ]}
+            >
+              <ThemedText style={styles.statLabel}>STREAK</ThemedText>
+              <View style={styles.statValueRow}>
+                <Ionicons
+                  name="flame"
+                  size={20}
+                  color={isDark ? "#FFF" : "#000"}
+                />
+                <ThemedText style={styles.statValue}>{streak} days</ThemedText>
+              </View>
+            </View>
+            <View
+              style={[
+                styles.statItem,
+                { backgroundColor: isDark ? "#1A1A1A" : "#F3F4F6" },
+              ]}
+            >
+              <ThemedText style={styles.statLabel}>TOTAL LOGS</ThemedText>
+              <View style={styles.statValueRow}>
+                <Ionicons
+                  name="checkmark-circle"
+                  size={20}
+                  color={isDark ? "#FFF" : "#000"}
+                />
+                <ThemedText style={styles.statValue}>
+                  {totalLogged} logs
+                </ThemedText>
+              </View>
+            </View>
+          </View>
+
           {/* Options Section */}
           <View style={styles.optionsContainer}>
             <OptionRow
@@ -303,6 +342,33 @@ const styles = StyleSheet.create({
   section: {
     marginTop: 12,
     marginBottom: 32,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 32,
+  },
+  statItem: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 16,
+    gap: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontFamily: "Geist-Bold",
+    color: "#888",
+    letterSpacing: 1,
+  },
+  statValueRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statValue: {
+    fontSize: 20,
+    fontFamily: "Geist-Bold",
+    letterSpacing: -0.5,
   },
   sectionLabel: {
     fontSize: 12,

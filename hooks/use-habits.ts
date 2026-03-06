@@ -5,8 +5,78 @@ import {
   type Habit,
   type NewHabit,
 } from "@/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
+
+// Fetch stats for a single habit (streak and total logged)
+export function useHabitStats(id: number) {
+  const [stats, setStats] = useState({ streak: 0, totalLogged: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const refetch = useCallback(async () => {
+    try {
+      const result = await db
+        .select()
+        .from(habitCompletions)
+        .where(eq(habitCompletions.habitId, id))
+        .orderBy(desc(habitCompletions.date));
+
+      const totalLogged = result.length;
+      let streak = 0;
+
+      if (totalLogged > 0) {
+        const formatDate = (d: Date) => {
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${year}-${month}-${day}`;
+        };
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayStr = formatDate(today);
+
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = formatDate(yesterday);
+
+        const completionDates = result.map((c) => c.date);
+
+        // A streak is valid if completed today OR completed yesterday
+        // (If not completed today yet, the streak from yesterday is still alive)
+        const hasCompletedToday = completionDates.includes(todayStr);
+        const hasCompletedYesterday = completionDates.includes(yesterdayStr);
+
+        if (hasCompletedToday || hasCompletedYesterday) {
+          let checkDate = hasCompletedToday ? today : yesterday;
+          streak = 0;
+
+          while (true) {
+            const checkDateStr = formatDate(checkDate);
+            if (completionDates.includes(checkDateStr)) {
+              streak++;
+              checkDate.setDate(checkDate.getDate() - 1);
+            } else {
+              break;
+            }
+          }
+        }
+      }
+
+      setStats({ streak, totalLogged });
+    } catch (e) {
+      console.error("Failed to fetch habit stats:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { ...stats, loading, refetch };
+}
 
 // Fetch all habits
 export function useHabits() {
