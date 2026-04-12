@@ -5,7 +5,8 @@ import {
   type Habit,
   type NewHabit,
 } from "@/db/schema";
-import { and, desc, eq } from "drizzle-orm";
+import { habitAppliesOnDate } from "@/lib/date";
+import { and, desc, eq, gte } from "drizzle-orm";
 import { useCallback, useEffect, useState } from "react";
 
 // Fetch stats for a single habit (streak and total logged)
@@ -15,10 +16,24 @@ export function useHabitStats(id: number) {
 
   const refetch = useCallback(async () => {
     try {
+      const habitRows = await db
+        .select({ startDate: habits.startDate })
+        .from(habits)
+        .where(eq(habits.id, id))
+        .limit(1);
+      const startDate = habitRows[0]?.startDate;
+
+      const completionWhere = startDate
+        ? and(
+            eq(habitCompletions.habitId, id),
+            gte(habitCompletions.date, startDate),
+          )
+        : eq(habitCompletions.habitId, id);
+
       const result = await db
         .select()
         .from(habitCompletions)
-        .where(eq(habitCompletions.habitId, id))
+        .where(completionWhere)
         .orderBy(desc(habitCompletions.date));
 
       const totalLogged = result.length;
@@ -249,14 +264,15 @@ export function useToggleCompletion() {
 }
 
 // Get completion counts for a range of dates (for heatmap)
-export function useCompletionCounts(dates: string[], totalHabits: number) {
+export function useCompletionCounts(dates: string[], habitList: Habit[]) {
   const [percentages, setPercentages] = useState<Record<string, number>>({});
 
   const refetch = useCallback(async () => {
-    if (dates.length === 0 || totalHabits === 0) return;
+    if (dates.length === 0) return;
 
     try {
-      // Fetch all completions for the date range
+      const habitById = new Map(habitList.map((h) => [h.id, h]));
+
       const result = await db
         .select()
         .from(habitCompletions)
@@ -264,21 +280,25 @@ export function useCompletionCounts(dates: string[], totalHabits: number) {
 
       const countByDate: Record<string, number> = {};
       result.forEach((row) => {
-        if (dates.includes(row.date)) {
-          countByDate[row.date] = (countByDate[row.date] || 0) + 1;
-        }
+        if (!dates.includes(row.date)) return;
+        const h = habitById.get(row.habitId);
+        if (!h || !habitAppliesOnDate(h, row.date)) return;
+        countByDate[row.date] = (countByDate[row.date] || 0) + 1;
       });
 
       const pctMap: Record<string, number> = {};
       dates.forEach((d) => {
+        const active = habitList.filter((habit) =>
+          habitAppliesOnDate(habit, d),
+        ).length;
         const count = countByDate[d] || 0;
-        pctMap[d] = (count / totalHabits) * 100;
+        pctMap[d] = active === 0 ? 0 : (count / active) * 100;
       });
       setPercentages(pctMap);
     } catch (e) {
       console.error("Failed to fetch completion counts:", e);
     }
-  }, [dates, totalHabits]);
+  }, [dates, habitList]);
 
   useEffect(() => {
     refetch();

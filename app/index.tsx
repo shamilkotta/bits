@@ -8,6 +8,7 @@ import {
   useToggleCompletion,
 } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
+import { formatYmd, habitAppliesOnDate } from "@/lib/date";
 import { updateAllWidgets } from "@/widgets/update-widgets";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useRouter } from "expo-router";
@@ -27,14 +28,6 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_WIDTH = SCREEN_WIDTH / 7.5;
 const HORIZONTAL_PADDING = (SCREEN_WIDTH - 7 * ITEM_WIDTH) / 2;
 
-// Helper to format date as YYYY-MM-DD
-const formatDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
-
 // Helper to get a range of dates
 const getDatesRange = (daysCount: number, offset: number = 0) => {
   const dates = [];
@@ -44,7 +37,7 @@ const getDatesRange = (daysCount: number, offset: number = 0) => {
   for (let i = -offset; i < daysCount - offset; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
-    dates.push(formatDate(d));
+    dates.push(formatYmd(d));
   }
   return dates;
 };
@@ -55,7 +48,7 @@ const OFFSET_DAYS = 180;
 export default function HomeScreen() {
   const router = useRouter();
   const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
-  const today = useMemo(() => formatDate(new Date()), []);
+  const today = useMemo(() => formatYmd(new Date()), []);
   const flatListRef = useRef<FlatList>(null);
   const [selectedDate, setSelectedDate] = useState(today);
 
@@ -73,7 +66,12 @@ export default function HomeScreen() {
 
   const { percentages, refetch: refetchCounts } = useCompletionCounts(
     calendarDates,
-    habits.length,
+    habits,
+  );
+
+  const visibleHabits = useMemo(
+    () => habits.filter((h) => habitAppliesOnDate(h, selectedDate)),
+    [habits, selectedDate],
   );
 
   // Refetch data when screen comes into focus (e.g. after creating a habit)
@@ -266,13 +264,13 @@ export default function HomeScreen() {
                 </ThemedText>
               </View>
             )}
-            {habits.map((habit) => {
+            {visibleHabits.map((habit) => {
               const isCompleted = !!completions[habit.id];
               return (
                 <TouchableOpacity
                   key={habit.id}
-                  onLongPress={() => router.push(`/habit/${habit.id}`)}
-                  onPress={() => toggleHabit(habit.id)}
+                  onPress={() => router.push(`/habit/${habit.id}`)}
+                  // onPress={() => toggleHabit(habit.id)}
                   style={styles.habitItem}
                   activeOpacity={0.7}
                 >

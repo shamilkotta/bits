@@ -2,6 +2,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { useHabit, useUpdateHabit } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
+import { formatYmd } from "@/lib/date";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -71,6 +72,10 @@ export default function EditHabitScreen() {
   const [popoverY, setPopoverY] = useState(0);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  const [startDate, setStartDate] = useState<string | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [startDateDraft, setStartDateDraft] = useState(new Date());
+
   const goalInputRef = useRef<TextInput>(null);
   const freqRowRef = useRef<View>(null);
 
@@ -82,6 +87,7 @@ export default function EditHabitScreen() {
       setGoal(String(habit.goal));
       setSelectedIcon(habit.icon);
       setCustomDays(JSON.parse(habit.customDays || "[]"));
+      setStartDate(habit.startDate ?? null);
     }
   }, [habit]);
 
@@ -138,6 +144,32 @@ export default function EditHabitScreen() {
     setShowPicker(false);
   };
 
+  const openStartDatePicker = () => {
+    if (startDate) {
+      const [y, m, d] = startDate.split("-").map(Number);
+      setStartDateDraft(new Date(y, m - 1, d));
+    } else {
+      setStartDateDraft(new Date());
+    }
+    setShowStartDatePicker(true);
+  };
+
+  const onStartDateChange = (event: { type?: string }, date?: Date) => {
+    if (Platform.OS === "android") {
+      setShowStartDatePicker(false);
+      if (event.type === "set" && date) {
+        setStartDate(formatYmd(date));
+      }
+    } else if (date) {
+      setStartDateDraft(date);
+    }
+  };
+
+  const handleConfirmStartDate = () => {
+    setStartDate(formatYmd(startDateDraft));
+    setShowStartDatePicker(false);
+  };
+
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
@@ -149,6 +181,7 @@ export default function EditHabitScreen() {
         customDays: JSON.stringify(customDays),
         goal: parseInt(goal, 10) || 1,
         times: JSON.stringify(selectedTimes),
+        startDate: startDate ?? null,
       });
       router.back();
     } catch (e) {
@@ -335,6 +368,84 @@ export default function EditHabitScreen() {
                   <ThemedText style={styles.unitLabel}>Units</ThemedText>
                 </View>
               </TouchableOpacity>
+
+              <OptionRow
+                label="START DATE"
+                value={
+                  startDate
+                    ? new Date(`${startDate}T12:00:00`).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        },
+                      )
+                    : "Not set"
+                }
+                onPress={openStartDatePicker}
+              />
+
+              {showStartDatePicker && Platform.OS === "ios" && (
+                <Modal visible transparent animationType="slide">
+                  <Pressable
+                    style={styles.modalBackdropBlur}
+                    onPress={() => setShowStartDatePicker(false)}
+                  >
+                    <View
+                      style={[
+                        styles.bottomSheet,
+                        { backgroundColor: isDark ? "#1A1A1A" : "#FFF" },
+                      ]}
+                    >
+                      <View style={styles.sheetHeaderThree}>
+                        <TouchableOpacity
+                          onPress={() => setShowStartDatePicker(false)}
+                        >
+                          <ThemedText style={styles.sheetCancel}>
+                            Cancel
+                          </ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setStartDate(null);
+                            setShowStartDatePicker(false);
+                          }}
+                          disabled={!startDate}
+                        >
+                          <ThemedText
+                            style={[
+                              styles.sheetCancel,
+                              !startDate && { opacity: 0.35 },
+                            ]}
+                          >
+                            Clear
+                          </ThemedText>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleConfirmStartDate}>
+                          <ThemedText style={styles.sheetDone}>Done</ThemedText>
+                        </TouchableOpacity>
+                      </View>
+                      <DateTimePicker
+                        value={startDateDraft}
+                        mode="date"
+                        display="spinner"
+                        onChange={onStartDateChange}
+                        textColor={isDark ? "#FFF" : "#000"}
+                      />
+                    </View>
+                  </Pressable>
+                </Modal>
+              )}
+
+              {showStartDatePicker && Platform.OS === "android" && (
+                <DateTimePicker
+                  value={startDateDraft}
+                  mode="date"
+                  display="default"
+                  onChange={onStartDateChange}
+                />
+              )}
             </View>
 
             <View style={styles.section}>
@@ -666,6 +777,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  sheetHeaderThree: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+    gap: 8,
   },
   sheetCancel: { fontSize: 16, color: "#666", fontFamily: "Geist-Medium" },
   sheetDone: { fontSize: 16, color: "#000", fontFamily: "Geist-Bold" },

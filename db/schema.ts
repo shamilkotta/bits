@@ -8,6 +8,7 @@ export const habits = sqliteTable("habits", {
   customDays: text().default("[]"), // JSON array of day abbreviations e.g. ["Mon","Wed"]
   goal: int().notNull().default(1),
   times: text().default('["Morning"]'), // JSON array of time strings
+  startDate: text(),
   createdAt: text()
     .notNull()
     .$defaultFn(() => new Date().toISOString()),

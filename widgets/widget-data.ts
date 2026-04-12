@@ -1,14 +1,7 @@
 import { db } from "@/db/client";
 import { habitCompletions, habits } from "@/db/schema";
+import { formatYmd, habitAppliesOnDate } from "@/lib/date";
 import { and, eq, gte } from "drizzle-orm";
-
-// Helper to format date as YYYY-MM-DD
-const formatDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
 
 export async function getHeatmapData() {
   try {
@@ -19,13 +12,12 @@ export async function getHeatmapData() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(today.getDate() - i);
-      dates.push(formatDate(d));
+      dates.push(formatYmd(d));
     }
 
     const allHabits = await db.select().from(habits);
-    const totalHabits = allHabits.length;
 
-    if (totalHabits === 0) {
+    if (allHabits.length === 0) {
       return {
         days: dates.map((d) => ({
           label: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][
@@ -48,17 +40,29 @@ export async function getHeatmapData() {
         ),
       );
 
+    const habitById = new Map(allHabits.map((h) => [h.id, h]));
     const countByDate: Record<string, number> = {};
     completions.forEach((row) => {
+      const h = habitById.get(row.habitId);
+      if (!h || !habitAppliesOnDate(h, row.date)) return;
       countByDate[row.date] = (countByDate[row.date] || 0) + 1;
     });
 
     return {
-      days: dates.map((d) => ({
-        label: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][new Date(d).getDay()],
-        date: new Date(d).getDate(),
-        percentage: ((countByDate[d] || 0) / totalHabits) * 100,
-      })),
+      days: dates.map((d) => {
+        const active = allHabits.filter((habit) =>
+          habitAppliesOnDate(habit, d),
+        ).length;
+        const pct =
+          active === 0 ? 0 : ((countByDate[d] || 0) / active) * 100;
+        return {
+          label: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][
+            new Date(d).getDay()
+          ],
+          date: new Date(d).getDate(),
+          percentage: pct,
+        };
+      }),
     };
   } catch (error) {
     console.error("Failed to fetch heatmap data:", error);
@@ -68,16 +72,18 @@ export async function getHeatmapData() {
 
 export async function getDailyProgressData() {
   try {
-    const todayStr = formatDate(new Date());
+    const todayStr = formatYmd(new Date());
     const today = new Date();
     const weekday = today
       .toLocaleString("default", { weekday: "short" })
       .toUpperCase();
 
     const allHabits = await db.select().from(habits);
-    const totalHabits = allHabits.length;
+    const activeHabits = allHabits.filter((h) =>
+      habitAppliesOnDate(h, todayStr),
+    );
 
-    if (totalHabits === 0) {
+    if (activeHabits.length === 0) {
       return {
         percentage: 0,
         day: today.getDate(),
@@ -95,8 +101,11 @@ export async function getDailyProgressData() {
         ),
       );
 
+    const activeIds = new Set(activeHabits.map((h) => h.id));
+    const relevant = completions.filter((c) => activeIds.has(c.habitId));
+
     return {
-      percentage: completions.length / totalHabits,
+      percentage: relevant.length / activeHabits.length,
       day: today.getDate(),
       weekday,
     };

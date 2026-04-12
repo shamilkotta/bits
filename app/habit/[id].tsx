@@ -183,6 +183,21 @@ export default function HabitDetailsScreen() {
             />
             <OptionRow label="GOAL" value={`${habit.goal} Units`} />
             <OptionRow
+              label="START"
+              value={
+                habit.startDate
+                  ? new Date(`${habit.startDate}T12:00:00`).toLocaleDateString(
+                      undefined,
+                      {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      },
+                    )
+                  : "From first day (default)"
+              }
+            />
+            <OptionRow
               label="CREATED"
               value={new Date(habit.createdAt).toLocaleDateString(undefined, {
                 month: "long",
