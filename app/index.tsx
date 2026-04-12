@@ -269,8 +269,8 @@ export default function HomeScreen() {
               return (
                 <TouchableOpacity
                   key={habit.id}
-                  onPress={() => router.push(`/habit/${habit.id}`)}
-                  // onPress={() => toggleHabit(habit.id)}
+                  onLongPress={() => router.push(`/habit/${habit.id}`)}
+                  onPress={() => toggleHabit(habit.id)}
                   style={styles.habitItem}
                   activeOpacity={0.7}
                 >
