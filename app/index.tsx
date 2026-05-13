@@ -79,9 +79,8 @@ export default function HomeScreen() {
     useCallback(() => {
       refetchHabits();
       refetchCompletions();
-      refetchCounts();
       updateAllWidgets(colorScheme === "dark");
-    }, [refetchHabits, refetchCompletions, refetchCounts, colorScheme]),
+    }, [refetchHabits, refetchCompletions, colorScheme]),
   );
 
   // Cycle through theme modes: system -> light -> dark -> system
