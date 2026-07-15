@@ -33,8 +33,19 @@ export const userSettings = sqliteTable("user_settings", {
   hasSeenOnboarding: int().notNull().default(0), // 0 = false, 1 = true
 });
 
+export const blockedApps = sqliteTable("blocked_apps", {
+  id: text().primaryKey(),
+  name: text().notNull(),
+  icon: text().notNull(),
+  isBlocked: int().notNull().default(0), // 0 = false, 1 = true
+  updatedAt: text()
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
 // Type exports
 export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
 export type HabitCompletion = typeof habitCompletions.$inferSelect;
 export type UserSettings = typeof userSettings.$inferSelect;
+export type BlockedApp = typeof blockedApps.$inferSelect;

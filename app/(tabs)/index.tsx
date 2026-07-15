@@ -1,3 +1,4 @@
+import { useTabBarBottomInset } from "@/components/bottom-nav";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
@@ -47,6 +48,7 @@ const OFFSET_DAYS = 180;
 
 export default function HomeScreen() {
   const router = useRouter();
+  const tabBarInset = useTabBarBottomInset();
   const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
   const today = useMemo(() => formatYmd(new Date()), []);
   const flatListRef = useRef<FlatList>(null);
@@ -136,22 +138,38 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: tabBarInset + 24 },
+          ]}
         >
           {/* Header */}
           <View style={styles.header}>
             <ThemedText style={styles.title}>bits</ThemedText>
-            <TouchableOpacity
-              onPress={cycleTheme}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={styles.themeButton}
-            >
-              <Ionicons
-                name={getThemeIcon()}
-                size={24}
-                color={Colors[colorScheme].text}
-              />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                onPress={() => router.push("/new-habit")}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.headerButton}
+              >
+                <Ionicons
+                  name="add"
+                  size={28}
+                  color={Colors[colorScheme].text}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={cycleTheme}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={styles.headerButton}
+              >
+                <Ionicons
+                  name={getThemeIcon()}
+                  size={24}
+                  color={Colors[colorScheme].text}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Day-by-Day Pager (Dates and Heatmap dots combined) */}
@@ -254,7 +272,6 @@ export default function HomeScreen() {
             ]}
           />
 
-          {/* Habit List for Selected Date */}
           <View style={styles.habitList}>
             {habits.length === 0 && (
               <View style={styles.emptyState}>
@@ -328,17 +345,6 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-
-      <TouchableOpacity
-        style={[
-          styles.fab,
-          { backgroundColor: Colors[colorScheme].text }, // Use text color as background for contrast
-        ]}
-        activeOpacity={0.8}
-        onPress={() => router.push("/new-habit")}
-      >
-        <Ionicons name="add" size={32} color={Colors[colorScheme].background} />
-      </TouchableOpacity>
     </ThemedView>
   );
 }
@@ -353,7 +359,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 40,
   },
   header: {
     flexDirection: "row",
@@ -367,7 +372,12 @@ const styles = StyleSheet.create({
     fontFamily: "Geist-Bold",
     letterSpacing: -0.5,
   },
-  themeButton: {
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  headerButton: {
     padding: 8,
     borderRadius: 12,
   },
@@ -461,21 +471,6 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#000000", // Default to black
     borderRadius: 2.5,
-  },
-  fab: {
-    position: "absolute",
-    bottom: 30,
-    right: 10,
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   emptyState: {
     alignItems: "center",

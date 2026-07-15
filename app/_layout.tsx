@@ -149,11 +149,11 @@ export default function RootLayout() {
         value={colorScheme === "dark" ? CustomDarkTheme : DefaultTheme}
       >
         <Stack
-          initialRouteName={hasSeenOnboarding ? "index" : "welcome"}
+          initialRouteName={hasSeenOnboarding ? "(tabs)" : "welcome"}
           screenOptions={{ headerShown: false }}
         >
           <Stack.Screen name="welcome" options={{ animation: "none" }} />
-          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen
             name="new-habit"
             options={{ presentation: "containedModal" }}

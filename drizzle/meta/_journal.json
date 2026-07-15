@@ -29,6 +29,13 @@
       "when": 1776008638449,
       "tag": "0003_milky_titania",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784029495665,
+      "tag": "0004_aberrant_elektra",
+      "breakpoints": true
     }
   ]
 }
