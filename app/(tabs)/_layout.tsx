@@ -29,7 +29,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="app-blocks"
         options={{
-          title: "Focus",
+          title: "Day",
         }}
       />
     </Tabs>

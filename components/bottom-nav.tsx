@@ -4,20 +4,21 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import Animated, {
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
+    interpolate,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const TAB_BAR_WIDTH = 216;
-const TAB_BAR_HEIGHT = 64;
-const TAB_BAR_PADDING = 6;
-const TAB_BAR_GAP = 8;
+const ACTIVE_TAB_WIDTH = 104;
+const INACTIVE_TAB_WIDTH = 46;
+const TAB_BAR_HEIGHT = 48;
+const TAB_BAR_PADDING = 3;
+const TAB_BAR_GAP = 6;
 const TAB_BAR_MARGIN = 10;
-const TAB_ITEM_WIDTH =
-  (TAB_BAR_WIDTH - TAB_BAR_PADDING * 2 - TAB_BAR_GAP) / 2;
+const TAB_BAR_WIDTH =
+  ACTIVE_TAB_WIDTH + INACTIVE_TAB_WIDTH + TAB_BAR_GAP + TAB_BAR_PADDING * 2 + 2;
 const TAB_ITEM_HEIGHT = TAB_BAR_HEIGHT - TAB_BAR_PADDING * 2;
 
 const TAB_CONFIG = {
@@ -26,8 +27,8 @@ const TAB_CONFIG = {
     icon: "sparkles-outline",
   },
   "app-blocks": {
-    label: "Focus",
-    icon: "shield-half-outline",
+    label: "Day",
+    icon: "calendar-outline",
   },
 } as const;
 
@@ -55,9 +56,11 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX:
-          TAB_BAR_PADDING +
-          activeIndex.value * (TAB_ITEM_WIDTH + TAB_BAR_GAP),
+        translateX: interpolate(
+          activeIndex.value,
+          [0, 1],
+          [TAB_BAR_PADDING, TAB_BAR_PADDING + INACTIVE_TAB_WIDTH + TAB_BAR_GAP],
+        ),
       },
     ],
   }));
@@ -160,15 +163,6 @@ function NavItem({
     opacity: interpolate(activeProgress.value, [0, 1], [0.55, 1]),
   }));
 
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(activeProgress.value, [0, 1], [0.55, 1]),
-    transform: [
-      {
-        translateY: interpolate(activeProgress.value, [0, 1], [2, 0]),
-      },
-    ],
-  }));
-
   const activeColor = colorScheme === "dark" ? "#000000" : "#FFFFFF";
   const inactiveColor = "#9CA3AF";
   const tintColor = isActive ? activeColor : inactiveColor;
@@ -182,15 +176,22 @@ function NavItem({
       onPressOut={() => {
         pressScale.value = withSpring(1, PRESS_SPRING);
       }}
-      style={styles.itemPressable}
+      style={[
+        styles.itemPressable,
+        { width: isActive ? ACTIVE_TAB_WIDTH : INACTIVE_TAB_WIDTH },
+      ]}
     >
-      <Animated.View style={[styles.item, itemStyle]}>
+      <Animated.View
+        style={[styles.item, isActive && styles.activeItem, itemStyle]}
+      >
         <Animated.View style={iconStyle}>
-          <Ionicons name={icon} size={22} color={tintColor} />
+          <Ionicons name={icon} size={18} color={tintColor} />
         </Animated.View>
-        <Animated.Text style={[styles.label, { color: tintColor }, labelStyle]}>
-          {label}
-        </Animated.Text>
+        {isActive && (
+          <Animated.Text style={[styles.label, { color: tintColor }]}>
+            {label}
+          </Animated.Text>
+        )}
       </Animated.View>
     </Pressable>
   );
@@ -209,10 +210,10 @@ const styles = StyleSheet.create({
     height: TAB_BAR_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     gap: TAB_BAR_GAP,
     borderWidth: 1,
-    borderRadius: 24,
+    borderRadius: 22,
     padding: TAB_BAR_PADDING,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
@@ -225,25 +226,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     left: 0,
     top: TAB_BAR_PADDING,
-    width: TAB_ITEM_WIDTH,
-    height: TAB_ITEM_HEIGHT,
-    borderRadius: 18,
+    bottom: TAB_BAR_PADDING,
+    width: ACTIVE_TAB_WIDTH,
+    borderRadius: 17,
   },
   itemPressable: {
-    width: TAB_ITEM_WIDTH,
     height: TAB_ITEM_HEIGHT,
   },
   item: {
     width: "100%",
     height: "100%",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 18,
-    gap: 4,
+    borderRadius: 17,
+  },
+  activeItem: {
+    gap: 8,
   },
   label: {
-    fontSize: 12,
-    lineHeight: 14,
+    fontSize: 13,
+    lineHeight: 18,
     fontFamily: "Geist-SemiBold",
+    includeFontPadding: false,
+    textAlignVertical: "center",
   },
 });

@@ -1,0 +1,1 @@
+ALTER TABLE `day_notes` ADD `content` text DEFAULT '<p></p>' NOT NULL;

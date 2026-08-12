@@ -3,10 +3,10 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import {
-  useCompletionCounts,
-  useHabitCompletions,
-  useHabits,
-  useToggleCompletion,
+    useCompletionCounts,
+    useHabitCompletions,
+    useHabits,
+    useToggleCompletion,
 } from "@/hooks/use-habits";
 import { useTheme } from "@/hooks/use-theme";
 import { formatYmd, habitAppliesOnDate } from "@/lib/date";
@@ -15,12 +15,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { Redirect, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
-  Dimensions,
-  FlatList,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
+    Dimensions,
+    FlatList,
+    ScrollView,
+    StyleSheet,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -150,7 +150,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 onPress={() => router.push("/new-habit")}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                style={styles.headerButton}
+                style={[styles.headerButton, {paddingHorizontal: 8, paddingVertical: 4}]}
               >
                 <Ionicons
                   name="add"

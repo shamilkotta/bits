@@ -43,9 +43,21 @@ export const blockedApps = sqliteTable("blocked_apps", {
     .$defaultFn(() => new Date().toISOString()),
 });
 
+export const dayNotes = sqliteTable("day_notes", {
+  id: int().primaryKey({ autoIncrement: true }),
+  date: text().notNull().unique(), // YYYY-MM-DD
+  body: text().notNull().default(""),
+  checklist: text().notNull().default("[]"), // JSON array of checklist items
+  content: text().notNull().default("<p></p>"), // TenTap HTML document
+  updatedAt: text()
+    .notNull()
+    .$defaultFn(() => new Date().toISOString()),
+});
+
 // Type exports
 export type Habit = typeof habits.$inferSelect;
 export type NewHabit = typeof habits.$inferInsert;
 export type HabitCompletion = typeof habitCompletions.$inferSelect;
 export type UserSettings = typeof userSettings.$inferSelect;
 export type BlockedApp = typeof blockedApps.$inferSelect;
+export type DayNote = typeof dayNotes.$inferSelect;

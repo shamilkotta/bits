@@ -36,6 +36,20 @@
       "when": 1784029495665,
       "tag": "0004_aberrant_elektra",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1786544336498,
+      "tag": "0005_secret_lenny_balinger",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786563102180,
+      "tag": "0006_plain_marrow",
+      "breakpoints": true
     }
   ]
 }

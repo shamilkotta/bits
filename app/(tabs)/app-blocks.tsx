@@ -2,53 +2,300 @@ import { useTabBarBottomInset } from "@/components/bottom-nav";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { useBlockedApps, type BlockableApp } from "@/hooks/use-blocked-apps";
+import { useDayNote } from "@/hooks/use-day-note";
 import { useTheme } from "@/hooks/use-theme";
+import { formatYmd } from "@/lib/date";
+import {
+  defaultEditorTheme,
+  RichText,
+  Toolbar,
+  useEditorBridge,
+} from "@10play/tentap-editor";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const ITEM_WIDTH = SCREEN_WIDTH / 7.5;
+const HORIZONTAL_PADDING = (SCREEN_WIDTH - 7 * ITEM_WIDTH) / 2;
+const DAYS_COUNT = 184;
+const OFFSET_DAYS = 180;
+const lightEditorCss = `
+  * {
+    background-color: #FFFFFF;
+    color: #111827;
+  }
+  html, body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .ProseMirror::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .ProseMirror {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #111827;
+    border-radius: 4px;
+    background-color: #FFFFFF;
+    position: relative;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+    background-color: #111827;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #FFFFFF;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  blockquote {
+    border-left: 3px solid #D1D5DB;
+    padding-left: 1rem;
+  }
+`;
+const darkEditorCss = `
+  * {
+    background-color: #000000;
+    color: #FFFFFF;
+  }
+  html, body {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar,
+  .ProseMirror::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  .ProseMirror {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #FFFFFF;
+    border-radius: 4px;
+    background-color: #000000;
+    position: relative;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
+    background-color: #FFFFFF;
+  }
+  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid #000000;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  blockquote {
+    border-left: 3px solid #374151;
+    padding-left: 1rem;
+  }
+  .highlight-background {
+    background-color: #1F2937;
+  }
+`;
+
+const getDatesRange = (daysCount: number, offset: number = 0) => {
+  const dates = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let i = -offset; i < daysCount - offset; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    dates.push(formatYmd(d));
+  }
+
+  return dates;
+};
 
 export default function AppBlocksScreen() {
   const tabBarInset = useTabBarBottomInset();
   const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
-  const { apps, blockedCount, toggleAppBlock } = useBlockedApps();
-  const [challengeApp, setChallengeApp] = useState<BlockableApp | null>(null);
-  const [challengeAnswer, setChallengeAnswer] = useState("");
-  const [challengeError, setChallengeError] = useState("");
+  const today = useMemo(() => formatYmd(new Date()), []);
+  const [selectedDate, setSelectedDate] = useState(today);
+  const flatListRef = useRef<FlatList>(null);
+  const calendarDates = useMemo(
+    () => getDatesRange(DAYS_COUNT, OFFSET_DAYS),
+    [],
+  );
+  const { note, loading: noteLoading, saveNote } = useDayNote(selectedDate);
+  const syncedEditorDateRef = useRef<string | null>(null);
+  const editorTheme = useMemo(
+    () =>
+      colorScheme === "dark"
+        ? {
+            toolbar: {
+              toolbarBody: {
+                backgroundColor: "#000000",
+                borderTopColor: "#1F2937",
+                borderBottomColor: "#1F2937",
+              },
+              toolbarButton: {
+                backgroundColor: "#000000",
+              },
+              icon: {
+                tintColor: "#FFFFFF",
+              },
+              iconDisabled: {
+                tintColor: "#4B5563",
+              },
+              iconWrapper: {
+                backgroundColor: "#000000",
+              },
+              iconWrapperActive: {
+                backgroundColor: "#1F2937",
+              },
+              linkBarTheme: {
+                addLinkContainer: {
+                  backgroundColor: "#000000",
+                  borderTopColor: "#1F2937",
+                  borderBottomColor: "#1F2937",
+                },
+                linkInput: {
+                  backgroundColor: "#000000",
+                  color: "#FFFFFF",
+                },
+                placeholderTextColor: "#6B7280",
+                doneButton: {
+                  backgroundColor: "#FFFFFF",
+                },
+                doneButtonText: {
+                  color: "#000000",
+                },
+              },
+            },
+            webview: {
+              backgroundColor: "#000000",
+            },
+            webviewContainer: {
+              backgroundColor: "#000000",
+            },
+          }
+        : defaultEditorTheme,
+    [colorScheme],
+  );
+  const editor = useEditorBridge({
+    avoidIosKeyboard: true,
+    initialContent: note.content,
+    theme: editorTheme,
+  });
 
-  const openApp = (app: BlockableApp) => {
-    if (app.isBlocked === 1) {
-      setChallengeApp(app);
-      setChallengeAnswer("");
-      setChallengeError("");
-      return;
-    }
-    setChallengeApp(null);
-  };
+  const resetEditorScroll = useCallback(() => {
+    editor.webviewRef.current?.injectJavaScript(`
+      const resetScroll = () => {
+        const editorEl = document.querySelector('.ProseMirror');
+        const scrollParents = [
+          editorEl,
+          document.scrollingElement,
+          document.documentElement,
+          document.body,
+        ].filter(Boolean);
+        scrollParents.forEach((element) => {
+          element.scrollTop = 0;
+          element.scrollLeft = 0;
+        });
+        window.scrollTo(0, 0);
+      };
+      resetScroll();
+      setTimeout(resetScroll, 50);
+      setTimeout(resetScroll, 150);
+      true;
+    `);
+  }, [editor]);
 
-  const closeChallenge = () => {
-    setChallengeApp(null);
-    setChallengeAnswer("");
-    setChallengeError("");
-  };
+  const applyEditorTheme = useCallback(() => {
+    const css = `${colorScheme === "dark" ? darkEditorCss : lightEditorCss}
+      .ProseMirror {
+        padding-bottom: ${tabBarInset + 80}px !important;
+      }`;
 
-  const submitChallenge = () => {
-    if (challengeAnswer.trim() === "8") {
-      closeChallenge();
-      return;
-    }
-    setChallengeError("Try again before continuing.");
-  };
+    (editor as any).injectCSS?.(css, "bits-editor-theme");
+    setTimeout(() => {
+      (editor as any).injectCSS?.(css, "bits-editor-theme");
+    }, 100);
+    setTimeout(() => {
+      (editor as any).injectCSS?.(css, "bits-editor-theme");
+    }, 300);
+  }, [colorScheme, editor, tabBarInset]);
+
+  useEffect(() => {
+    if (noteLoading || note.date !== selectedDate) return;
+    if (syncedEditorDateRef.current === selectedDate) return;
+
+    editor.setContent(note.content);
+    resetEditorScroll();
+    syncedEditorDateRef.current = selectedDate;
+  }, [
+    editor,
+    note.content,
+    note.date,
+    noteLoading,
+    resetEditorScroll,
+    selectedDate,
+  ]);
+
+  useEffect(() => {
+    return editor._subscribeToContentUpdate(async () => {
+      const content = await editor.getHTML();
+      syncedEditorDateRef.current = selectedDate;
+      saveNote({ content });
+    });
+  }, [editor, saveNote, selectedDate]);
+
+  useEffect(() => {
+    applyEditorTheme();
+    return editor._subscribeToEditorStateUpdate((state: any) => {
+      if (state.isReady) applyEditorTheme();
+    });
+  }, [applyEditorTheme, editor]);
 
   const cycleTheme = () => {
     if (theme === "system") setTheme("light");
@@ -68,187 +315,154 @@ export default function AppBlocksScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: tabBarInset + 24 },
-          ]}
+      <SafeAreaView style={styles.safeArea}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <View style={styles.header}>
-            <View>
-              <ThemedText style={styles.title}>focus</ThemedText>
-            </View>
-            <TouchableOpacity
-              onPress={cycleTheme}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              style={styles.themeButton}
-            >
-              <Ionicons
-                name={getThemeIcon()}
-                size={24}
-                color={Colors[colorScheme].text}
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.appList}>
-            {apps.map((app) => {
-              const isBlocked = app.isBlocked === 1;
-              return (
+          <View style={styles.screenContent}>
+            <View style={styles.header}>
+              <ThemedText style={styles.title}>day</ThemedText>
+              <View style={styles.headerActions}>
                 <TouchableOpacity
-                  key={app.id}
-                  onPress={() => openApp(app)}
-                  activeOpacity={0.75}
-                  style={[
-                    styles.appItem,
-                    {
-                      borderColor:
-                        colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
-                    },
-                  ]}
+                  onPress={cycleTheme}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.headerButton}
                 >
-                  <View style={styles.appInfo}>
-                    <View
+                  <Ionicons
+                    name={getThemeIcon()}
+                    size={24}
+                    color={Colors[colorScheme].text}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.pagerContainer}>
+              <FlatList
+                ref={flatListRef}
+                data={calendarDates}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => item}
+                initialScrollIndex={OFFSET_DAYS}
+                snapToInterval={ITEM_WIDTH}
+                decelerationRate="fast"
+                contentContainerStyle={{
+                  paddingHorizontal: HORIZONTAL_PADDING,
+                }}
+                getItemLayout={(data, index) => ({
+                  length: ITEM_WIDTH,
+                  offset: ITEM_WIDTH * index,
+                  index,
+                })}
+                renderItem={({ item: dateStr }) => {
+                  const dateObj = new Date(dateStr);
+                  const dayName = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"][
+                    dateObj.getDay()
+                  ];
+                  const isSelected = selectedDate === dateStr;
+                  const isToday = today === dateStr;
+                  const isFuture = dateStr > today;
+
+                  return (
+                    <TouchableOpacity
+                      disabled={isFuture}
+                      onPress={() => setSelectedDate(dateStr)}
                       style={[
-                        styles.appIcon,
-                        {
-                          backgroundColor: isBlocked
-                            ? colorScheme === "dark"
-                              ? "#FFFFFF"
-                              : "#111827"
-                            : colorScheme === "dark"
-                              ? "#111827"
-                              : "#F3F4F6",
+                        styles.dateItem,
+                        { width: ITEM_WIDTH, opacity: isFuture ? 0.4 : 1 },
+                        isSelected && {
+                          backgroundColor:
+                            colorScheme === "dark" ? "#1F2937" : "#F3F4F6",
                         },
                       ]}
                     >
-                      <Ionicons
-                        name={app.icon as any}
-                        size={22}
-                        color={
-                          isBlocked
-                            ? colorScheme === "dark"
-                              ? "#000000"
-                              : "#FFFFFF"
-                            : Colors[colorScheme].text
-                        }
-                      />
-                    </View>
-                    <View style={styles.appText}>
-                      <ThemedText style={styles.appName}>{app.name}</ThemedText>
-                      <ThemedText style={styles.appStatus}>
-                        {isBlocked ? "Challenge required" : "Allowed"}
+                      <ThemedText
+                        style={[
+                          styles.dayText,
+                          isSelected && styles.selectedText,
+                        ]}
+                      >
+                        {dayName}
                       </ThemedText>
-                    </View>
-                  </View>
-                  <Switch
-                    value={isBlocked}
-                    onValueChange={() => toggleAppBlock(app.id, isBlocked)}
-                    trackColor={{ false: "#D1D5DB", true: "#9CA3AF" }}
-                    thumbColor={
-                      isBlocked
-                        ? colorScheme === "dark"
-                          ? "#FFFFFF"
-                          : "#111827"
-                        : "#FFFFFF"
-                    }
-                  />
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-
-      <Modal
-        visible={challengeApp !== null}
-        transparent
-        animationType="fade"
-        onRequestClose={closeChallenge}
-      >
-        <View style={styles.modalScrim}>
-          <View
-            style={[
-              styles.challengeCard,
-              {
-                backgroundColor: Colors[colorScheme].background,
-                borderColor: colorScheme === "dark" ? "#1F2937" : "#E5E7EB",
-              },
-            ]}
-          >
-            <View style={styles.challengeIcon}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={26}
-                color={Colors[colorScheme].text}
+                      <ThemedText
+                        style={[
+                          styles.dateText,
+                          isSelected && styles.selectedText,
+                        ]}
+                      >
+                        {dateObj.getDate()}
+                      </ThemedText>
+                      {isToday && (
+                        <View
+                          style={[
+                            styles.todayDot,
+                            { backgroundColor: Colors[colorScheme].text },
+                          ]}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
               />
             </View>
-            <ThemedText style={styles.challengeTitle}>
-              {challengeApp?.name} is blocked
-            </ThemedText>
-            <ThemedText style={styles.challengePrompt}>
-              Solve 3 + 5 to continue.
-            </ThemedText>
-            <TextInput
-              value={challengeAnswer}
-              onChangeText={(text) => {
-                setChallengeAnswer(text);
-                setChallengeError("");
-              }}
-              keyboardType="number-pad"
-              placeholder="Answer"
-              placeholderTextColor="#9CA3AF"
+
+            <View
               style={[
-                styles.challengeInput,
+                styles.divider,
                 {
-                  color: Colors[colorScheme].text,
-                  borderColor: colorScheme === "dark" ? "#374151" : "#D1D5DB",
+                  backgroundColor:
+                    colorScheme === "dark" ? "#374151" : "#E5E7EB",
                 },
               ]}
             />
-            {challengeError.length > 0 && (
-              <ThemedText style={styles.challengeError}>
-                {challengeError}
-              </ThemedText>
-            )}
-            <View style={styles.challengeActions}>
-              <TouchableOpacity
-                onPress={closeChallenge}
+
+            <View
+              style={[
+                styles.toolbarShell,
+                {
+                  backgroundColor:
+                    colorScheme === "dark" ? "#000000" : "#FFFFFF",
+                  borderColor: colorScheme === "dark" ? "#1F2937" : "#D1D5DB",
+                },
+              ]}
+            >
+              <Toolbar editor={editor} hidden={false} />
+            </View>
+            <View
+              style={[
+                styles.editorShell,
+                {
+                  backgroundColor:
+                    colorScheme === "dark" ? "#000000" : "#FFFFFF",
+                },
+              ]}
+            >
+              <RichText
+                key={selectedDate}
+                editor={editor}
+                onLoad={() => {
+                  applyEditorTheme();
+                  if (note.date === selectedDate) {
+                    editor.setContent(note.content);
+                    resetEditorScroll();
+                  }
+                }}
+                showsVerticalScrollIndicator={false}
+                showsHorizontalScrollIndicator={false}
                 style={[
-                  styles.secondaryButton,
+                  styles.richTextEditor,
                   {
-                    borderColor:
-                      colorScheme === "dark" ? "#374151" : "#D1D5DB",
+                    backgroundColor:
+                      colorScheme === "dark" ? "#000000" : "#FFFFFF",
                   },
                 ]}
-              >
-                <ThemedText style={styles.secondaryButtonText}>
-                  Cancel
-                </ThemedText>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={submitChallenge}
-                style={[
-                  styles.primaryButton,
-                  { backgroundColor: Colors[colorScheme].text },
-                ]}
-              >
-                <ThemedText
-                  style={[
-                    styles.primaryButtonText,
-                    { color: Colors[colorScheme].background },
-                  ]}
-                >
-                  Continue
-                </ThemedText>
-              </TouchableOpacity>
+              />
             </View>
           </View>
-        </View>
-      </Modal>
-
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </ThemedView>
   );
 }
@@ -260,20 +474,34 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  scrollContent: {
+  keyboardView: {
+    flex: 1,
+  },
+  screenContent: {
+    flex: 1,
     paddingHorizontal: 20,
     paddingTop: 10,
   },
   header: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 30,
+    alignItems: "center",
+    marginBottom: 36,
   },
   title: {
     fontSize: 34,
     lineHeight: 40,
     fontFamily: "Geist-Bold",
+    letterSpacing: -0.5,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  headerButton: {
+    padding: 8,
+    borderRadius: 12,
   },
   subtitle: {
     marginTop: 4,
@@ -285,121 +513,54 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
   },
-  appList: {
-    gap: 14,
+  pagerContainer: {
+    marginBottom: 16,
+    marginHorizontal: -20,
+    width: SCREEN_WIDTH,
   },
-  appItem: {
-    minHeight: 72,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    flexDirection: "row",
+  dateItem: {
     alignItems: "center",
-    justifyContent: "space-between",
-    gap: 14,
-  },
-  appInfo: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  appIcon: {
+    gap: 8,
     width: 42,
-    height: 42,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: 8,
+    borderRadius: 12,
+    position: "relative",
   },
-  appText: {
-    flex: 1,
-    gap: 4,
-  },
-  appName: {
-    fontSize: 16,
-    fontFamily: "Geist-SemiBold",
-  },
-  appStatus: {
-    fontSize: 13,
+  dayText: {
+    fontSize: 12,
     color: "#9CA3AF",
     fontFamily: "Geist-Medium",
+    textTransform: "uppercase",
   },
-  modalScrim: {
+  dateText: {
+    fontSize: 17,
+    fontFamily: "Geist-SemiBold",
+  },
+  selectedText: {
+    fontFamily: "Geist-Bold",
+  },
+  todayDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
+  divider: {
+    height: 1,
+    marginBottom: 16,
+  },
+  editorShell: {
     flex: 1,
-    padding: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.55)",
+    overflow: "hidden",
   },
-  challengeCard: {
-    width: "100%",
-    maxWidth: 420,
+  richTextEditor: {
+    flex: 1,
+    backgroundColor: "transparent",
+  },
+  toolbarShell: {
+    height: 46,
     borderWidth: 1,
-    borderRadius: 8,
-    padding: 22,
-  },
-  challengeIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
+    borderRadius: 16,
     marginBottom: 18,
-  },
-  challengeTitle: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontFamily: "Geist-Bold",
-  },
-  challengePrompt: {
-    marginTop: 10,
-    fontSize: 16,
-    lineHeight: 22,
-    color: "#9CA3AF",
-    fontFamily: "Geist-Medium",
-  },
-  challengeInput: {
-    height: 52,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginTop: 20,
-    paddingHorizontal: 14,
-    fontSize: 18,
-    fontFamily: "Geist-SemiBold",
-  },
-  challengeError: {
-    marginTop: 10,
-    color: "#EF4444",
-    fontSize: 14,
-    fontFamily: "Geist-Medium",
-  },
-  challengeActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 20,
-  },
-  secondaryButton: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontFamily: "Geist-SemiBold",
-  },
-  primaryButton: {
-    flex: 1,
-    height: 48,
-    borderRadius: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontFamily: "Geist-Bold",
+    overflow: "hidden",
   },
 });
