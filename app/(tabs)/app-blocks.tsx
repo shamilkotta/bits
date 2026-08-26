@@ -1,16 +1,12 @@
+import { DayMarkdownEditor } from "@/components/day-markdown-editor";
+import { MarkdownPreview } from "@/components/markdown-preview";
 import { useTabBarBottomInset } from "@/components/bottom-nav";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
-import { useDayNote } from "@/hooks/use-day-note";
+import { useDayNote, upsertDayNote } from "@/hooks/use-day-note";
 import { useTheme } from "@/hooks/use-theme";
 import { formatYmd } from "@/lib/date";
-import {
-  defaultEditorTheme,
-  RichText,
-  Toolbar,
-  useEditorBridge,
-} from "@10play/tentap-editor";
 import { Ionicons } from "@expo/vector-icons";
 import { Redirect } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -30,117 +26,11 @@ const ITEM_WIDTH = SCREEN_WIDTH / 7.5;
 const HORIZONTAL_PADDING = (SCREEN_WIDTH - 7 * ITEM_WIDTH) / 2;
 const DAYS_COUNT = 184;
 const OFFSET_DAYS = 180;
-const lightEditorCss = `
-  * {
-    background-color: #FFFFFF;
-    color: #111827;
-  }
-  html, body {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  ::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar,
-  .ProseMirror::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-  .ProseMirror {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid #111827;
-    border-radius: 4px;
-    background-color: #FFFFFF;
-    position: relative;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
-    background-color: #111827;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 5px;
-    height: 9px;
-    border: solid #FFFFFF;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-  blockquote {
-    border-left: 3px solid #D1D5DB;
-    padding-left: 1rem;
-  }
-`;
-const darkEditorCss = `
-  * {
-    background-color: #000000;
-    color: #FFFFFF;
-  }
-  html, body {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  ::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar,
-  .ProseMirror::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-  .ProseMirror {
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"] {
-    appearance: none;
-    -webkit-appearance: none;
-    width: 18px;
-    height: 18px;
-    border: 2px solid #FFFFFF;
-    border-radius: 4px;
-    background-color: #000000;
-    position: relative;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"]:checked {
-    background-color: #FFFFFF;
-  }
-  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::after {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 1px;
-    width: 5px;
-    height: 9px;
-    border: solid #000000;
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-  blockquote {
-    border-left: 3px solid #374151;
-    padding-left: 1rem;
-  }
-  .highlight-background {
-    background-color: #1F2937;
-  }
-`;
+
+type Draft = {
+  date: string;
+  content: string;
+};
 
 const getDatesRange = (daysCount: number, offset: number = 0) => {
   const dates = [];
@@ -160,142 +50,66 @@ export default function AppBlocksScreen() {
   const tabBarInset = useTabBarBottomInset();
   const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
   const today = useMemo(() => formatYmd(new Date()), []);
+  const isDark = colorScheme === "dark";
+
   const [selectedDate, setSelectedDate] = useState(today);
+  const [previewMode, setPreviewMode] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const calendarDates = useMemo(
     () => getDatesRange(DAYS_COUNT, OFFSET_DAYS),
     [],
   );
-  const { note, loading: noteLoading, saveNote } = useDayNote(selectedDate);
-  const syncedEditorDateRef = useRef<string | null>(null);
-  const editorTheme = useMemo(
-    () =>
-      colorScheme === "dark"
-        ? {
-            toolbar: {
-              toolbarBody: {
-                backgroundColor: "#000000",
-                borderTopColor: "#1F2937",
-                borderBottomColor: "#1F2937",
-              },
-              toolbarButton: {
-                backgroundColor: "#000000",
-              },
-              icon: {
-                tintColor: "#FFFFFF",
-              },
-              iconDisabled: {
-                tintColor: "#4B5563",
-              },
-              iconWrapper: {
-                backgroundColor: "#000000",
-              },
-              iconWrapperActive: {
-                backgroundColor: "#1F2937",
-              },
-              linkBarTheme: {
-                addLinkContainer: {
-                  backgroundColor: "#000000",
-                  borderTopColor: "#1F2937",
-                  borderBottomColor: "#1F2937",
-                },
-                linkInput: {
-                  backgroundColor: "#000000",
-                  color: "#FFFFFF",
-                },
-                placeholderTextColor: "#6B7280",
-                doneButton: {
-                  backgroundColor: "#FFFFFF",
-                },
-                doneButtonText: {
-                  color: "#000000",
-                },
-              },
-            },
-            webview: {
-              backgroundColor: "#000000",
-            },
-            webviewContainer: {
-              backgroundColor: "#000000",
-            },
-          }
-        : defaultEditorTheme,
-    [colorScheme],
-  );
-  const editor = useEditorBridge({
-    avoidIosKeyboard: true,
-    initialContent: note.content,
-    theme: editorTheme,
-  });
 
-  const resetEditorScroll = useCallback(() => {
-    editor.webviewRef.current?.injectJavaScript(`
-      const resetScroll = () => {
-        const editorEl = document.querySelector('.ProseMirror');
-        const scrollParents = [
-          editorEl,
-          document.scrollingElement,
-          document.documentElement,
-          document.body,
-        ].filter(Boolean);
-        scrollParents.forEach((element) => {
-          element.scrollTop = 0;
-          element.scrollLeft = 0;
-        });
-        window.scrollTo(0, 0);
-      };
-      resetScroll();
-      setTimeout(resetScroll, 50);
-      setTimeout(resetScroll, 150);
-      true;
-    `);
-  }, [editor]);
+  const { note, loading: noteLoading } = useDayNote(selectedDate);
 
-  const applyEditorTheme = useCallback(() => {
-    const css = `${colorScheme === "dark" ? darkEditorCss : lightEditorCss}
-      .ProseMirror {
-        padding-bottom: ${tabBarInset + 80}px !important;
-      }`;
+  // Draft holds exactly what is shown in the editor for one specific date,
+  // so switching days can never mix content between notes.
+  const [draft, setDraft] = useState<Draft | null>(null);
+  const pendingSaveRef = useRef<Draft | null>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    (editor as any).injectCSS?.(css, "bits-editor-theme");
-    setTimeout(() => {
-      (editor as any).injectCSS?.(css, "bits-editor-theme");
-    }, 100);
-    setTimeout(() => {
-      (editor as any).injectCSS?.(css, "bits-editor-theme");
-    }, 300);
-  }, [colorScheme, editor, tabBarInset]);
+  // Writes with the date captured in the pending draft, never the currently
+  // selected day - a late flush after switching days lands on the right row.
+  const flushSave = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const pending = pendingSaveRef.current;
+    if (!pending) return;
+    pendingSaveRef.current = null;
+    upsertDayNote(pending.date, pending.content).catch((e) =>
+      console.error("Failed to save day note:", e),
+    );
+  }, []);
 
+  // Load the freshly fetched note into the editor draft
   useEffect(() => {
     if (noteLoading || note.date !== selectedDate) return;
-    if (syncedEditorDateRef.current === selectedDate) return;
+    setDraft((current) =>
+      current?.date === selectedDate
+        ? current
+        : { date: selectedDate, content: note.content },
+    );
+  }, [note, noteLoading, selectedDate]);
 
-    editor.setContent(note.content);
-    resetEditorScroll();
-    syncedEditorDateRef.current = selectedDate;
-  }, [
-    editor,
-    note.content,
-    note.date,
-    noteLoading,
-    resetEditorScroll,
-    selectedDate,
-  ]);
-
+  // Drop any stale draft as soon as the day changes, before the DB round-trip
   useEffect(() => {
-    return editor._subscribeToContentUpdate(async () => {
-      const content = await editor.getHTML();
-      syncedEditorDateRef.current = selectedDate;
-      saveNote({ content });
-    });
-  }, [editor, saveNote, selectedDate]);
+    flushSave();
+    setDraft(null);
+  }, [selectedDate, flushSave]);
 
+  // Debounced autosave
   useEffect(() => {
-    applyEditorTheme();
-    return editor._subscribeToEditorStateUpdate((state: any) => {
-      if (state.isReady) applyEditorTheme();
-    });
-  }, [applyEditorTheme, editor]);
+    if (!draft || draft.date !== selectedDate) return;
+    pendingSaveRef.current = draft;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(flushSave, 500);
+    return () => {};
+  }, [draft, selectedDate, flushSave]);
+
+  // Flush on unmount so nothing is lost
+  useEffect(() => flushSave, [flushSave]);
 
   const cycleTheme = () => {
     if (theme === "system") setTheme("light");
@@ -313,6 +127,17 @@ export default function AppBlocksScreen() {
     return <Redirect href="/welcome" />;
   }
 
+  const editorColors = {
+    background: isDark ? "#000000" : "#FFFFFF",
+    text: isDark ? "#FFFFFF" : "#111827",
+    muted: isDark ? "#6B7280" : "#9CA3AF",
+    border: isDark ? "#1F2937" : "#D1D5DB",
+    toolbarActive: isDark ? "#1F2937" : "#F3F4F6",
+  };
+
+  const draftForSelectedDay =
+    draft?.date === selectedDate ? draft : null;
+
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -324,6 +149,21 @@ export default function AppBlocksScreen() {
             <View style={styles.header}>
               <ThemedText style={styles.title}>day</ThemedText>
               <View style={styles.headerActions}>
+                <TouchableOpacity
+                  onPress={() => setPreviewMode((p) => !p)}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.headerButton}
+                >
+                  <Ionicons
+                    name={previewMode ? "create-outline" : "eye-outline"}
+                    size={24}
+                    color={
+                      previewMode
+                        ? Colors[colorScheme].text
+                        : Colors[colorScheme].tabIconSelected
+                    }
+                  />
+                </TouchableOpacity>
                 <TouchableOpacity
                   onPress={cycleTheme}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -373,8 +213,7 @@ export default function AppBlocksScreen() {
                         styles.dateItem,
                         { width: ITEM_WIDTH, opacity: isFuture ? 0.4 : 1 },
                         isSelected && {
-                          backgroundColor:
-                            colorScheme === "dark" ? "#1F2937" : "#F3F4F6",
+                          backgroundColor: isDark ? "#1F2937" : "#F3F4F6",
                         },
                       ]}
                     >
@@ -412,54 +251,38 @@ export default function AppBlocksScreen() {
               style={[
                 styles.divider,
                 {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#374151" : "#E5E7EB",
+                  backgroundColor: isDark ? "#374151" : "#E5E7EB",
                 },
               ]}
             />
 
-            <View
-              style={[
-                styles.toolbarShell,
-                {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#000000" : "#FFFFFF",
-                  borderColor: colorScheme === "dark" ? "#1F2937" : "#D1D5DB",
-                },
-              ]}
-            >
-              <Toolbar editor={editor} hidden={false} />
-            </View>
-            <View
-              style={[
-                styles.editorShell,
-                {
-                  backgroundColor:
-                    colorScheme === "dark" ? "#000000" : "#FFFFFF",
-                },
-              ]}
-            >
-              <RichText
-                key={selectedDate}
-                editor={editor}
-                onLoad={() => {
-                  applyEditorTheme();
-                  if (note.date === selectedDate) {
-                    editor.setContent(note.content);
-                    resetEditorScroll();
+            {draftForSelectedDay ? (
+              previewMode ? (
+                <MarkdownPreview
+                  value={draftForSelectedDay.content}
+                  colors={editorColors}
+                  bottomInset={tabBarInset}
+                  onToggleCheckbox={(content) =>
+                    setDraft({ date: selectedDate, content })
                   }
-                }}
-                showsVerticalScrollIndicator={false}
-                showsHorizontalScrollIndicator={false}
-                style={[
-                  styles.richTextEditor,
-                  {
-                    backgroundColor:
-                      colorScheme === "dark" ? "#000000" : "#FFFFFF",
-                  },
-                ]}
-              />
-            </View>
+                />
+              ) : (
+                <DayMarkdownEditor
+                  value={draftForSelectedDay.content}
+                  onChangeText={(content) =>
+                    setDraft({ date: selectedDate, content })
+                  }
+                  colors={editorColors}
+                  bottomInset={tabBarInset}
+                />
+              )
+            ) : (
+              <View style={[styles.editorPlaceholder]}>
+                <ThemedText style={{ color: editorColors.muted }}>
+                  Loading…
+                </ThemedText>
+              </View>
+            )}
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -503,16 +326,6 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 12,
   },
-  subtitle: {
-    marginTop: 4,
-    fontSize: 15,
-    color: "#9CA3AF",
-    fontFamily: "Geist-Medium",
-  },
-  themeButton: {
-    padding: 8,
-    borderRadius: 12,
-  },
   pagerContainer: {
     marginBottom: 16,
     marginHorizontal: -20,
@@ -548,19 +361,9 @@ const styles = StyleSheet.create({
     height: 1,
     marginBottom: 16,
   },
-  editorShell: {
+  editorPlaceholder: {
     flex: 1,
-    overflow: "hidden",
-  },
-  richTextEditor: {
-    flex: 1,
-    backgroundColor: "transparent",
-  },
-  toolbarShell: {
-    height: 46,
-    borderWidth: 1,
-    borderRadius: 16,
-    marginBottom: 18,
-    overflow: "hidden",
+    alignItems: "center",
+    paddingTop: 40,
   },
 });

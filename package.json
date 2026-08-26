@@ -13,7 +13,7 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@10play/tentap-editor": "^1.0.1",
+    "@expensify/react-native-live-markdown": "^0.1.336",
     "@expo/ui": "55.0.1",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-community/datetimepicker": "8.6.0",
@@ -21,6 +21,7 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "drizzle-orm": "^0.45.1",
+    "expensify-common": "2.0.199",
     "expo": "~55.0.4",
     "expo-constants": "~55.0.7",
     "expo-font": "~55.0.4",
@@ -35,6 +36,7 @@
     "expo-system-ui": "~55.0.9",
     "expo-web-browser": "~55.0.9",
     "expo-widgets": "^55.0.2",
+    "html-entities": "2.5.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-native": "0.83.2",

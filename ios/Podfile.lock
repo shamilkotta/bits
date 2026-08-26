@@ -2033,6 +2033,29 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNLiveMarkdown (0.1.336):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNWorklets
+    - Yoga
   - RNReanimated (4.2.1):
     - hermes-engine
     - RCTRequired
@@ -2236,28 +2259,6 @@ PODS:
   - SDWebImageWebPCoder (0.14.6):
     - libwebp (~> 1.0)
     - SDWebImage/Core (~> 5.17)
-  - tentap (1.0.1):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -2360,10 +2361,10 @@ DEPENDENCIES:
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
   - "RNDateTimePicker (from `../node_modules/@react-native-community/datetimepicker`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - "RNLiveMarkdown (from `../node_modules/@expensify/react-native-live-markdown`)"
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
-  - "tentap (from `../node_modules/@10play/tentap-editor`)"
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -2574,14 +2575,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@react-native-community/datetimepicker"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNLiveMarkdown:
+    :path: "../node_modules/@expensify/react-native-live-markdown"
   RNReanimated:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   RNWorklets:
     :path: "../node_modules/react-native-worklets"
-  tentap:
-    :path: "../node_modules/@10play/tentap-editor"
   Yoga:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
@@ -2687,6 +2688,7 @@ SPEC CHECKSUMS:
   ReactNativeDependencies: fae1f23f736d9d7abd5325d903e816a6e9b50391
   RNDateTimePicker: 9c0a849bbe1c256f0854fea255734b715f5ea876
   RNGestureHandler: 5494787ce29288a8941fa825663f2b1fa0a5aaf1
+  RNLiveMarkdown: 72627c2cc4f35e55084272d60fe45042a1e68e74
   RNReanimated: 86e5991396f1aa514db90d6c79d4c3e37a37bb10
   RNScreens: 02e62f995ceb94ea465864b3bf4d4767b87f0362
   RNWorklets: 0e736f568c3c61cb3326cdcda767c4daee56a8a9
@@ -2694,7 +2696,6 @@ SPEC CHECKSUMS:
   SDWebImageAVIFCoder: afe194a084e851f70228e4be35ef651df0fc5c57
   SDWebImageSVGCoder: 15a300a97ec1c8ac958f009c02220ac0402e936c
   SDWebImageWebPCoder: e38c0a70396191361d60c092933e22c20d5b1380
-  tentap: 60c7b42c6b4c3e91ebccb9917a0217a8009b8112
   Yoga: dd994d8c85dca5cc9b10f5df8c01f9ef1d0da191
 
 PODFILE CHECKSUM: 5e533c1d3c22365b1bb582086325611a002bf484

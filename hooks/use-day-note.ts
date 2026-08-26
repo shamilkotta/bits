@@ -1,5 +1,6 @@
 import { db } from "@/db/client";
 import { dayNotes } from "@/db/schema";
+import { htmlToMarkdown, looksLikeHtml } from "@/lib/markdown";
 import { eq } from "drizzle-orm";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -12,10 +13,10 @@ type LoadedDayNoteState = DayNoteState & {
 };
 
 const emptyNote: DayNoteState = {
-  content: "<p></p>",
+  content: "",
 };
 
-function legacyChecklistToHtml(value: string): string {
+function legacyChecklistToMarkdown(value: string): string {
   try {
     const parsed = JSON.parse(value);
     if (!Array.isArray(parsed) || parsed.length === 0) return "";
@@ -23,13 +24,12 @@ function legacyChecklistToHtml(value: string): string {
     const items = parsed
       .filter((item) => item && typeof item === "object")
       .map((item) => {
-        const checked = item.checked === true ? ' data-checked="true"' : "";
+        const checked = item.checked === true ? "x" : " ";
         const text = typeof item.text === "string" ? item.text : "";
-        return `<li${checked}>${text}</li>`;
-      })
-      .join("");
+        return `- [${checked}] ${text}`;
+      });
 
-    return items.length > 0 ? `<ul data-type="taskList">${items}</ul>` : "";
+    return items.join("\n");
   } catch {
     return "";
   }
@@ -40,16 +40,42 @@ function getInitialContent(
   body: string,
   checklist: string,
 ): string {
-  if (content && content !== "[]") return content;
+  let stored = (content ?? "").trim();
+  if (stored === "[]") stored = "";
 
-  const bodyHtml = body
+  // Legacy TenTap notes were stored as HTML - convert once on read
+  if (looksLikeHtml(stored)) stored = htmlToMarkdown(stored);
+
+  if (stored && stored !== "<p></p>") return stored;
+
+  const bodyMarkdown = body
     .split("\n")
     .filter((line) => line.length > 0)
-    .map((line) => `<p>${line}</p>`)
-    .join("");
-  const checklistHtml = legacyChecklistToHtml(checklist);
+    .join("\n");
+  const checklistMarkdown = legacyChecklistToMarkdown(checklist);
 
-  return bodyHtml || checklistHtml ? `${bodyHtml}${checklistHtml}` : emptyNote.content;
+  return [bodyMarkdown, checklistMarkdown].filter(Boolean).join("\n");
+}
+
+async function upsertDayNoteRow(date: string, content: string) {
+  await db
+    .insert(dayNotes)
+    .values({
+      date,
+      body: "",
+      checklist: "[]",
+      content,
+      updatedAt: new Date().toISOString(),
+    })
+    .onConflictDoUpdate({
+      target: dayNotes.date,
+      set: {
+        body: "",
+        checklist: "[]",
+        content,
+        updatedAt: new Date().toISOString(),
+      },
+    });
 }
 
 export function useDayNote(date: string) {
@@ -92,24 +118,7 @@ export function useDayNote(date: string) {
     async (nextNote: DayNoteState) => {
       setNote({ ...nextNote, date });
       try {
-        await db
-          .insert(dayNotes)
-          .values({
-            date,
-            body: "",
-            checklist: "[]",
-            content: nextNote.content,
-            updatedAt: new Date().toISOString(),
-          })
-          .onConflictDoUpdate({
-            target: dayNotes.date,
-            set: {
-              body: "",
-              checklist: "[]",
-              content: nextNote.content,
-              updatedAt: new Date().toISOString(),
-            },
-          });
+        await upsertDayNoteRow(date, nextNote.content);
       } catch (e) {
         console.error("Failed to save day note:", e);
         throw e;
@@ -123,3 +132,5 @@ export function useDayNote(date: string) {
     [note, loading, saveNote, refetch],
   );
 }
+
+export { upsertDayNoteRow as upsertDayNote };
