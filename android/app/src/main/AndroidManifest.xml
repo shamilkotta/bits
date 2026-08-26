@@ -42,5 +42,12 @@
       </intent-filter>
       <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_dailyprogresswidget"/>
     </receiver>
+    <receiver android:name=".widget.DayNotesWidget" android:exported="false" android:label="Today's Note">
+      <intent-filter>
+        <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+        <action android:name="com.shudio.bits.WIDGET_CLICK"/>
+      </intent-filter>
+      <meta-data android:name="android.appwidget.provider" android:resource="@xml/widgetprovider_daynoteswidget"/>
+    </receiver>
   </application>
 </manifest>

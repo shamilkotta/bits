@@ -1,6 +1,7 @@
 import { db } from "@/db/client";
-import { habitCompletions, habits } from "@/db/schema";
+import { dayNotes, habitCompletions, habits } from "@/db/schema";
 import { formatYmd, habitAppliesOnDate } from "@/lib/date";
+import { parseNoteLines } from "@/widgets/parse-note-lines";
 import { and, eq, gte } from "drizzle-orm";
 
 export async function getHeatmapData() {
@@ -112,5 +113,42 @@ export async function getDailyProgressData() {
   } catch (error) {
     console.error("Failed to fetch daily progress data:", error);
     return { percentage: 0, day: 1, weekday: "SUN" };
+  }
+}
+
+export async function getTodayNoteData() {
+  try {
+    const todayStr = formatYmd(new Date());
+    const today = new Date();
+    const weekday = today
+      .toLocaleString("default", { weekday: "short" })
+      .toUpperCase();
+
+    const rows = await db
+      .select()
+      .from(dayNotes)
+      .where(eq(dayNotes.date, todayStr))
+      .limit(1);
+
+    const content = rows[0]?.content ?? "";
+    return {
+      content,
+      lines: parseNoteLines(content).map((line) => ({
+        kind: line.kind,
+        text: line.text,
+      })),
+      date: todayStr,
+      day: today.getDate(),
+      weekday,
+    };
+  } catch (error) {
+    console.error("Failed to fetch today's note:", error);
+    return {
+      content: "",
+      lines: [],
+      date: formatYmd(new Date()),
+      day: new Date().getDate(),
+      weekday: "",
+    };
   }
 }

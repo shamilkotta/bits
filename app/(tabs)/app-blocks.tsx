@@ -5,6 +5,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { Colors } from "@/constants/theme";
 import { useDayNote, upsertDayNote } from "@/hooks/use-day-note";
+import { updateAllWidgets } from "@/widgets/update-widgets";
 import { useTheme } from "@/hooks/use-theme";
 import { formatYmd } from "@/lib/date";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,13 +14,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Dimensions,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ITEM_WIDTH = SCREEN_WIDTH / 7.5;
@@ -48,17 +53,40 @@ const getDatesRange = (daysCount: number, offset: number = 0) => {
 
 export default function AppBlocksScreen() {
   const tabBarInset = useTabBarBottomInset();
-  const { theme, setTheme, colorScheme, hasSeenOnboarding } = useTheme();
+  const insets = useSafeAreaInsets();
+  const { theme, setTheme, colorScheme, dayViewMode, setDayViewMode, hasSeenOnboarding } =
+    useTheme();
   const today = useMemo(() => formatYmd(new Date()), []);
   const isDark = colorScheme === "dark";
 
   const [selectedDate, setSelectedDate] = useState(today);
-  const [previewMode, setPreviewMode] = useState(false);
+  // Edge-to-edge Android no longer resizes the window for the IME, so
+  // KeyboardAvoidingView + adjustResize are ineffective — lift manually.
+  const [androidKeyboardOffset, setAndroidKeyboardOffset] = useState(0);
+  const previewMode = dayViewMode === "preview";
   const flatListRef = useRef<FlatList>(null);
   const calendarDates = useMemo(
     () => getDatesRange(DAYS_COUNT, OFFSET_DAYS),
     [],
   );
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setAndroidKeyboardOffset(
+        Math.max(0, e.endCoordinates.height - insets.bottom),
+      );
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setAndroidKeyboardOffset(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [insets.bottom]);
 
   const { note, loading: noteLoading } = useDayNote(selectedDate);
 
@@ -67,6 +95,8 @@ export default function AppBlocksScreen() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const pendingSaveRef = useRef<Draft | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isDarkRef = useRef(isDark);
+  isDarkRef.current = isDark;
 
   // Writes with the date captured in the pending draft, never the currently
   // selected day - a late flush after switching days lands on the right row.
@@ -78,9 +108,9 @@ export default function AppBlocksScreen() {
     const pending = pendingSaveRef.current;
     if (!pending) return;
     pendingSaveRef.current = null;
-    upsertDayNote(pending.date, pending.content).catch((e) =>
-      console.error("Failed to save day note:", e),
-    );
+    upsertDayNote(pending.date, pending.content)
+      .then(() => updateAllWidgets(isDarkRef.current))
+      .catch((e) => console.error("Failed to save day note:", e));
   }, []);
 
   // Load the freshly fetched note into the editor draft
@@ -137,12 +167,19 @@ export default function AppBlocksScreen() {
 
   const draftForSelectedDay =
     draft?.date === selectedDate ? draft : null;
+  const editorBottomInset =
+    androidKeyboardOffset > 0 ? 24 : tabBarInset;
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView
-          style={styles.keyboardView}
+          style={[
+            styles.keyboardView,
+            androidKeyboardOffset > 0 && {
+              paddingBottom: androidKeyboardOffset,
+            },
+          ]}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <View style={styles.screenContent}>
@@ -150,7 +187,9 @@ export default function AppBlocksScreen() {
               <ThemedText style={styles.title}>day</ThemedText>
               <View style={styles.headerActions}>
                 <TouchableOpacity
-                  onPress={() => setPreviewMode((p) => !p)}
+                  onPress={() =>
+                    setDayViewMode(previewMode ? "edit" : "preview")
+                  }
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   style={styles.headerButton}
                 >
@@ -261,7 +300,7 @@ export default function AppBlocksScreen() {
                 <MarkdownPreview
                   value={draftForSelectedDay.content}
                   colors={editorColors}
-                  bottomInset={tabBarInset}
+                  bottomInset={editorBottomInset}
                   onToggleCheckbox={(content) =>
                     setDraft({ date: selectedDate, content })
                   }
@@ -273,7 +312,7 @@ export default function AppBlocksScreen() {
                     setDraft({ date: selectedDate, content })
                   }
                   colors={editorColors}
-                  bottomInset={tabBarInset}
+                  bottomInset={editorBottomInset}
                 />
               )
             ) : (

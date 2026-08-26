@@ -50,6 +50,13 @@
       "when": 1786563102180,
       "tag": "0006_plain_marrow",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1787742766371,
+      "tag": "0007_ambitious_bulldozer",
+      "breakpoints": true
     }
   ]
 }

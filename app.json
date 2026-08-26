@@ -24,6 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
+      "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
       "package": "com.shudio.bits"
     },
@@ -59,13 +60,20 @@
               "supportedFamilies": ["systemMedium"],
               "contentMarginsDisabled": true
             },
-            {
-              "name": "DailyProgressWidget",
-              "displayName": "Today's Progress",
-              "description": "Shows your habit completion progress for today",
-              "supportedFamilies": ["systemSmall"],
-              "contentMarginsDisabled": true
-            }
+        {
+          "name": "DailyProgressWidget",
+          "displayName": "Today's Progress",
+          "description": "Shows your habit completion progress for today",
+          "supportedFamilies": ["systemSmall"],
+          "contentMarginsDisabled": true
+        },
+        {
+          "name": "DayNotesWidget",
+          "displayName": "Today's Note",
+          "description": "Shows today's note with formatted tasks and lists",
+          "supportedFamilies": ["systemMedium", "systemLarge"],
+          "contentMarginsDisabled": true
+        }
           ]
         }
       ],
@@ -92,10 +100,20 @@
               "name": "DailyProgressWidget",
               "label": "Today's Progress",
               "description": "Shows your habit completion progress for today",
-              "minWidth": "40dp",
+              "minWidth": "200dp",
               "minHeight": "40dp",
               "targetCellWidth": 1,
               "targetCellHeight": 1,
+              "resizeMode": "horizontal|vertical"
+            },
+            {
+              "name": "DayNotesWidget",
+              "label": "Today's Note",
+              "description": "Shows today's note with formatted tasks and lists",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
               "resizeMode": "horizontal|vertical"
             }
           ]

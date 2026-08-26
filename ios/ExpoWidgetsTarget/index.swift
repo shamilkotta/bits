@@ -7,6 +7,7 @@ struct ExportWidgets0: WidgetBundle {
   var body: some Widget {
     HeatmapWidget()
 	DailyProgressWidget()
+	DayNotesWidget()
     WidgetLiveActivity()
   }
 }

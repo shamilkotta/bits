@@ -1,12 +1,14 @@
 import DailyProgressWidget from "./ios/DailyProgressWidget";
+import DayNotesWidget from "./ios/DayNotesWidget";
 import HeatmapWidget from "./ios/HeatmapWidget";
-import { getDailyProgressData, getHeatmapData } from "./widget-data";
+import { getDailyProgressData, getHeatmapData, getTodayNoteData } from "./widget-data";
 
 export async function updateAllWidgets(isDark: boolean) {
   try {
-    const [heatmapData, dailyProgressData] = await Promise.all([
+    const [heatmapData, dailyProgressData, todayNoteData] = await Promise.all([
       getHeatmapData(),
       getDailyProgressData(),
+      getTodayNoteData(),
     ]);
 
     HeatmapWidget.updateSnapshot({
@@ -15,6 +17,10 @@ export async function updateAllWidgets(isDark: boolean) {
     });
     DailyProgressWidget.updateSnapshot({
       ...dailyProgressData,
+      isDark,
+    });
+    DayNotesWidget.updateSnapshot({
+      ...todayNoteData,
       isDark,
     });
   } catch (error) {

@@ -1,11 +1,14 @@
 import { createContext, useContext } from "react";
 
 export type ThemeMode = "light" | "dark" | "system";
+export type DayViewMode = "edit" | "preview";
 
 export interface ThemeContextType {
   theme: ThemeMode;
   setTheme: (theme: ThemeMode) => void;
   colorScheme: "light" | "dark";
+  dayViewMode: DayViewMode;
+  setDayViewMode: (mode: DayViewMode) => void;
   hasSeenOnboarding: boolean;
   completeOnboarding: () => Promise<void>;
 }

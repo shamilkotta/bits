@@ -1,6 +1,6 @@
 import { db } from "@/db/client";
 import { userSettings } from "@/db/schema";
-import { ThemeContext, ThemeMode } from "@/hooks/use-theme";
+import { DayViewMode, ThemeContext, ThemeMode } from "@/hooks/use-theme";
 import {
   DarkTheme,
   DefaultTheme,
@@ -27,6 +27,7 @@ export default function RootLayout() {
   const nativeColorScheme = useNativeColorScheme();
   const [theme, setThemeState] = useState<ThemeMode>("system");
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+  const [dayViewMode, setDayViewModeState] = useState<DayViewMode>("edit");
   const { success: migrationsSuccess, error: migrationsError } = useMigrations(
     db,
     migrations,
@@ -64,6 +65,9 @@ export default function RootLayout() {
           const settings = await db.select().from(userSettings).limit(1);
           if (settings.length > 0) {
             setThemeState(settings[0].theme as ThemeMode);
+            setDayViewModeState(
+              settings[0].dayViewMode === "preview" ? "preview" : "edit",
+            );
             setHasSeenOnboarding(settings[0].hasSeenOnboarding === 1);
           } else {
             // Initialize with default
@@ -98,6 +102,15 @@ export default function RootLayout() {
       await db.update(userSettings).set({ theme: newTheme });
     } catch (e) {
       console.error("Failed to update theme in DB:", e);
+    }
+  };
+
+  const setDayViewMode = async (mode: DayViewMode) => {
+    setDayViewModeState(mode);
+    try {
+      await db.update(userSettings).set({ dayViewMode: mode });
+    } catch (e) {
+      console.error("Failed to update day view mode in DB:", e);
     }
   };
 
@@ -141,6 +154,8 @@ export default function RootLayout() {
         theme,
         setTheme,
         colorScheme,
+        dayViewMode,
+        setDayViewMode,
         hasSeenOnboarding,
         completeOnboarding,
       }}

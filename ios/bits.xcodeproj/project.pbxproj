@@ -18,6 +18,7 @@
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		C017FA93956081CA5BCF3B90 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7531DD6061ADF03A4286788 /* ExpoModulesProvider.swift */; };
 		DE77F7DAC2D7483881F139B8 /* DailyProgressWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95506791F39348A3B3899D6B /* DailyProgressWidget.swift */; };
+		C3D4E5F6A7B8C9D0E1F2A3 /* DayNotesWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6A7B8C9D0E1F2A3 /* DayNotesWidget.swift */; };
 		E1D335EF8519F6888A713160 /* libPods-Bits.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F6B04345E1C90D6F0202A74 /* libPods-Bits.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
@@ -58,6 +59,7 @@
 		7F6B04345E1C90D6F0202A74 /* libPods-Bits.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Bits.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		894DA56F3D62483CB7A0578D /* ExpoWidgetsTarget.entitlements */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = undefined; includeInIndex = 0; lastKnownFileType = unknown; name = ExpoWidgetsTarget.entitlements; path = /Users/shamilkotta/Documents/projects/bits/ios/ExpoWidgetsTarget/ExpoWidgetsTarget.entitlements; sourceTree = "<group>"; };
 		95506791F39348A3B3899D6B /* DailyProgressWidget.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = DailyProgressWidget.swift; path = /Users/shamilkotta/Documents/projects/bits/ios/ExpoWidgetsTarget/DailyProgressWidget.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6A7B8C9D0E1F2A3 /* DayNotesWidget.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = DayNotesWidget.swift; path = /Users/shamilkotta/Documents/projects/bits/ios/ExpoWidgetsTarget/DayNotesWidget.swift; sourceTree = "<group>"; };
 		9D41A083B4A597FC05ABDEF6 /* Pods-Bits.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bits.release.xcconfig"; path = "Target Support Files/Pods-Bits/Pods-Bits.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Bits/SplashScreen.storyboard; sourceTree = "<group>"; };
 		AD2C5C568F2CDB2FD6642144 /* libPods-ExpoWidgetsTarget.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-ExpoWidgetsTarget.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -203,6 +205,7 @@
 				F83FB2965D4F463A90E1AAA6 /* index.swift */,
 				184BD9A25069418F9851B536 /* HeatmapWidget.swift */,
 				95506791F39348A3B3899D6B /* DailyProgressWidget.swift */,
+				B2C3D4E5F6A7B8C9D0E1F2A3 /* DayNotesWidget.swift */,
 				BE26FA33D466485CBCF4DE61 /* ExpoWidgetsTarget.entitlements */,
 			);
 			name = ExpoWidgetsTarget;
@@ -509,6 +512,7 @@
 				1F05D5B6D316479BB96CA1CC /* index.swift in Sources */,
 				186640075712426AB755D564 /* HeatmapWidget.swift in Sources */,
 				DE77F7DAC2D7483881F139B8 /* DailyProgressWidget.swift in Sources */,
+				C3D4E5F6A7B8C9D0E1F2A3 /* DayNotesWidget.swift in Sources */,
 				4A66EED59A4164B830F7283F /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

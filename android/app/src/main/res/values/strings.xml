@@ -3,5 +3,6 @@
   <string name="expo_system_ui_user_interface_style" translatable="false">automatic</string>
   <string name="widget_heatmapwidget_description" translatable="false">Shows your habit completion heatmap for the last 7 days</string>
   <string name="widget_dailyprogresswidget_description" translatable="false">Shows your habit completion progress for today</string>
+  <string name="widget_daynoteswidget_description" translatable="false">Shows your note for today with formatted tasks and lists</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
 </resources>

@@ -1,8 +1,8 @@
 import { useTheme } from "@/hooks/use-theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { useEffect } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Keyboard, Platform, Pressable, StyleSheet, View } from "react-native";
 import Animated, {
     interpolate,
     useAnimatedStyle,
@@ -48,10 +48,28 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
   const { colorScheme } = useTheme();
   const insets = useSafeAreaInsets();
   const activeIndex = useSharedValue(state.index);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
   useEffect(() => {
     activeIndex.value = withSpring(state.index, TAB_SPRING);
   }, [activeIndex, state.index]);
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent =
+      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+    const showSub = Keyboard.addListener(showEvent, () =>
+      setKeyboardVisible(true),
+    );
+    const hideSub = Keyboard.addListener(hideEvent, () =>
+      setKeyboardVisible(false),
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   const indicatorStyle = useAnimatedStyle(() => ({
     transform: [
@@ -66,6 +84,10 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
   }));
 
   const indicatorColor = colorScheme === "dark" ? "#FFFFFF" : "#111827";
+
+  if (keyboardVisible) {
+    return null;
+  }
 
   return (
     <View
